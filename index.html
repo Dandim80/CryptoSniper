@@ -1,39 +1,182 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Crypto Sniper</title>
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ3J5cHRvIFNuaXBlciIsInNob3J0X25hbWUiOiJDcnlwdG9TbmlwZXIiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTExMTEiLCJ0aGVtZV9jb2xvciI6IiMyMjIyMjIiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTVRJNElpQm9aV2xuYUhROUlqRXlPQ0lpSUhacFpYZENiM2c5SWpBZ01DQXhNamdnTVRJNElpQm1hV3hzUFNJak16TXpJaUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lQZ284Y21WamRDQjNhV1IwYUQwaU1USTRMQ0FnSUdObGRtbDBhRDBpTVMwd0lHRmpiaTB6SWlCbWFXeHNQU0lqTWpJeUlpOCtQSFJsZUhRZ2VEMGlOalFpSUhrOUlqWTBJaUJtYVd4c1BTSWpSa1pHSWlCbWIyNTBMWE5wZW1VOUlqSTBJaUJtYjI1MExXWmhiV2xzZVQwaWJXOXViM053WVdObElpQjBaWGgwTFdGdVkyaHZjajBpYldsa1pHeGxJajQ0TDJSbFpuTStQQzl6ZG1jKyIsInNpemVzIjoiMTI4eDEyOCIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+  <meta name="theme-color" content="#222222">
   <style>
-    body { font-family: Arial, sans-serif; background: #111; color: #eee; padding: 10px; }
+    body { 
+      font-family: Arial, sans-serif; 
+      background: #111; 
+      color: #eee; 
+      padding: 10px; 
+      margin: 0;
+    }
     h1 { text-align: center; }
-    select, button { margin: 5px; padding: 5px; }
-    .coin { padding: 10px; margin-bottom: 10px; background: #222; border-radius: 6px; cursor: pointer; }
-    .gain { color: lightgreen; font-weight: bold; }
-    .chart { margin-top: 10px; display: none; }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    select, button { 
+      margin: 5px; 
+      padding: 8px 12px; 
+      background: #333;
+      color: #eee;
+      border: 1px solid #555;
+      border-radius: 4px;
+    }
+    button {
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #444;
+    }
+    .coin { 
+      padding: 15px; 
+      margin-bottom: 10px; 
+      background: linear-gradient(135deg, #222, #333); 
+      border-radius: 8px; 
+      cursor: pointer; 
+      border-left: 4px solid #00ff88;
+      transition: transform 0.2s;
+    }
+    .coin:hover {
+      transform: translateX(5px);
+    }
+    .gain { 
+      color: #00ff88; 
+      font-weight: bold; 
+      font-size: 1.2em;
+    }
+    .chart { 
+      margin-top: 15px; 
+      display: none; 
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .status {
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .status.active {
+      background: linear-gradient(90deg, #00ff88, #00cc66);
+      color: #000;
+    }
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      select, button {
+        width: 100%;
+        margin: 5px 0;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>📈 Crypto Sniper</h1>
-  <label for="timeframe">Timeframe:</label>
-  <select id="timeframe">
-    <option value="1m">1 Min</option>
-    <option value="5m" selected>5 Min</option>
-    <option value="30m">30 Min</option>
-    <option value="1h">1 Ora</option>
-    <option value="4h">4 Ore</option>
-    <option value="1d">1 Giorno</option>
-    <option value="1w">1 Settimana</option>
-    <option value="1M">1 Mese</option>
-  </select>
-  <button onclick="loadSniper()">🔄 Ricarica Manuale</button>
-  <label><input type="checkbox" id="autoRefresh" checked> Ricarica Automatica</label>
+  <h1>📈 Crypto Sniper PWA</h1>
+  
+  <div class="status" id="status">
+    🔄 Inizializzazione...
+  </div>
+  
+  <div class="controls">
+    <label for="timeframe">Timeframe:</label>
+    <select id="timeframe">
+      <option value="1m">1 Min</option>
+      <option value="5m" selected>5 Min</option>
+      <option value="30m">30 Min</option>
+      <option value="1h">1 Ora</option>
+      <option value="4h">4 Ore</option>
+      <option value="1d">1 Giorno</option>
+      <option value="1w">1 Settimana</option>
+      <option value="1M">1 Mese</option>
+    </select>
+    <button onclick="loadSniper()">🔄 Ricarica Manuale</button>
+    <label><input type="checkbox" id="autoRefresh" checked> Auto Refresh</label>
+    <button onclick="requestWakeLock()">🔒 Mantieni Attivo</button>
+  </div>
+  
   <div id="results"></div>
 
   <script>
     const TELEGRAM_TOKEN = "7919987275:AAGeKy3A-ZtmYm4RZRDEb7MVz6JrOxx95Lc";
     const TELEGRAM_CHAT_ID = "525164223";
     let intervalId = null;
+    let wakeLock = null;
+    let isRunning = false;
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('data:application/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBpbnN0YWxsZWQnKTsKfSk7CgpzZWxmLmFkZEV2ZW50TGlzdGVuZXIoJ2FjdGl2YXRlJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBhY3RpdmF0ZWQnKTsKfSk7')
+        .then(registration => console.log('SW registered'))
+        .catch(error => console.log('SW registration failed'));
+    }
+
+    // Alternative al Wake Lock per dispositivi non supportati
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          updateStatus('🔒 Wake Lock attivo - schermo mantenuto acceso');
+          console.log('Wake lock attivo');
+        } else {
+          // Fallback: mantieni attiva la pagina con un timer invisibile
+          startKeepAliveTimer();
+          updateStatus('🔄 Keep-alive attivato (compatibilità)');
+        }
+      } catch (err) {
+        console.error('Errore wake lock:', err);
+        startKeepAliveTimer();
+        updateStatus('🔄 Keep-alive attivato (fallback)');
+      }
+    }
+
+    // Timer per mantenere attiva la pagina
+    function startKeepAliveTimer() {
+      setInterval(() => {
+        // Piccola operazione per mantenere attivo il JavaScript
+        const dummy = Date.now();
+        console.log('Keep-alive tick:', new Date().toLocaleTimeString());
+      }, 30000); // Ogni 30 secondi
+    }
+
+    // Richiedi audio context per mantenere attivo (metodo alternativo)
+    function initAudioKeepAlive() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime); // Volume 0
+        oscillator.frequency.setValueAtTime(20000, audioContext.currentTime); // Frequenza non udibile
+        oscillator.start();
+        
+        console.log('Audio keep-alive inizializzato');
+        return true;
+      } catch (err) {
+        console.error('Audio keep-alive fallito:', err);
+        return false;
+      }
+    }
+
+    function updateStatus(message) {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.className = isRunning ? 'status active' : 'status';
+    }
 
     async function getSymbols() {
       const res = await fetch("https://api.binance.com/api/v3/exchangeInfo");
@@ -61,7 +204,8 @@
               gain: gain.toFixed(2),
               open,
               close,
-              index: i
+              index: i,
+              timestamp: new Date(data[i][0]).toLocaleTimeString()
             };
           }
         }
@@ -73,75 +217,131 @@
           return null;
         }
       } catch (e) {
+        console.error('Errore per', symbol, ':', e);
         return null;
       }
     }
 
     async function sendTelegramAlert(data, tf) {
-      const message = `🚨 GAIN > 3%\n🔸 Coin: ${data.symbol}\n🔸 Timeframe: ${tf}\n🔸 Gain: ${data.gain}%\n🕒 Candela n° ${data.index + 1}\n🟢 Open: ${data.open}\n🔴 Close: ${data.close}`;
+      const message = `🚨 CRYPTO SNIPER ALERT 🚨\n\n🔸 Coin: ${data.symbol}\n🔸 Timeframe: ${tf}\n🔸 Gain: ${data.gain}%\n🕒 Candela n° ${data.index + 1}\n🟢 Open: ${data.open}\n🔴 Close: ${data.close}\n⏰ Timestamp: ${data.timestamp}`;
       const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-      await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message })
-      });
+      
+      try {
+        await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            chat_id: TELEGRAM_CHAT_ID, 
+            text: message,
+            parse_mode: 'HTML'
+          })
+        });
+        console.log('Alert inviato per', data.symbol);
+      } catch (err) {
+        console.error('Errore invio Telegram:', err);
+      }
     }
 
     async function loadSniper() {
       const tf = document.getElementById("timeframe").value;
       const container = document.getElementById("results");
-      container.innerHTML = "⏳ Caricamento...";
+      
+      isRunning = true;
+      updateStatus(`🔄 Scansione in corso... (${tf})`);
+      container.innerHTML = "⏳ Scansione mercato...";
 
-      const symbols = await getSymbols();
-      const results = [];
+      try {
+        const symbols = await getSymbols();
+        const results = [];
+        let processed = 0;
 
-      for (const symbol of symbols.slice(0, 100)) {
-        const data = await getMaxGain(symbol, tf);
-        if (data) results.push(data);
-        await new Promise(r => setTimeout(r, 100));
-      }
-
-      results.sort((a, b) => b.gain - a.gain);
-      container.innerHTML = "";
-
-      if (results.length === 0) {
-        container.innerHTML = "Nessuna coin con gain superiore al 3%";
-        return;
-      }
-
-      results.forEach(r => {
-        const el = document.createElement("div");
-        el.className = "coin";
-        el.innerHTML = `
-          <div><strong>${r.symbol}</strong></div>
-          <div>📊 Massimo Gain su 5 candele: <span class="gain">${r.gain}%</span></div>
-          <div>🕒 Candela n° ${r.index + 1} (0 = più vecchia, 5 = attuale)</div>
-          <div>🟢 Open: ${r.open} | 🔴 Close: ${r.close}</div>
-          <div class="chart" id="chart-${r.symbol}"></div>
-        `;
-        el.addEventListener("click", () => {
-          const chart = el.querySelector(".chart");
-          if (chart.innerHTML === "") {
-            chart.innerHTML = `<iframe src='https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=BINANCE:${r.symbol}&width=100%25&height=200&locale=it&interval=${tf}&colorTheme=dark' width='100%' height='200' frameborder='0' allowtransparency='true' scrolling='no'></iframe>`;
+        for (const symbol of symbols.slice(0, 150)) {
+          const data = await getMaxGain(symbol, tf);
+          if (data) results.push(data);
+          
+          processed++;
+          if (processed % 20 === 0) {
+            updateStatus(`🔄 Processate ${processed}/${symbols.slice(0, 150).length} coin...`);
           }
-          chart.style.display = chart.style.display === "none" ? "block" : "none";
-        });
-        container.appendChild(el);
-      });
+          
+          await new Promise(r => setTimeout(r, 50)); // Ridotto delay
+        }
+
+        results.sort((a, b) => b.gain - a.gain);
+        container.innerHTML = "";
+
+        if (results.length === 0) {
+          container.innerHTML = '<div class="coin">📊 Nessuna coin con gain superiore al 3% trovata in questo momento</div>';
+          updateStatus('✅ Scansione completata - Nessun gain > 3%');
+        } else {
+          updateStatus(`✅ Trovate ${results.length} coin con gain > 3%!`);
+          
+          results.forEach(r => {
+            const el = document.createElement("div");
+            el.className = "coin";
+            el.innerHTML = `
+              <div><strong>💰 ${r.symbol}</strong></div>
+              <div>📊 Massimo Gain: <span class="gain">+${r.gain}%</span></div>
+              <div>🕒 Candela n° ${r.index + 1} | ⏰ ${r.timestamp}</div>
+              <div>🟢 Open: ${r.open} | 🔴 Close: ${r.close}</div>
+              <div class="chart" id="chart-${r.symbol}"></div>
+            `;
+            
+            el.addEventListener("click", () => {
+              const chart = el.querySelector(".chart");
+              if (chart.innerHTML === "") {
+                chart.innerHTML = `<iframe src='https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=BINANCE:${r.symbol}&width=100%25&height=200&locale=it&interval=${tf}&colorTheme=dark' width='100%' height='200' frameborder='0' allowtransparency='true' scrolling='no'></iframe>`;
+              }
+              chart.style.display = chart.style.display === "none" ? "block" : "none";
+            });
+            
+            container.appendChild(el);
+          });
+        }
+      } catch (error) {
+        console.error('Errore durante la scansione:', error);
+        updateStatus('❌ Errore durante la scansione');
+        container.innerHTML = '<div class="coin">❌ Errore durante la scansione del mercato</div>';
+      }
+      
+      isRunning = false;
     }
 
+    // Event listeners
     document.getElementById("timeframe").addEventListener("change", loadSniper);
 
     document.getElementById("autoRefresh").addEventListener("change", function () {
       if (this.checked) {
         intervalId = setInterval(loadSniper, 60000);
+        updateStatus('🔄 Auto refresh attivato (60s)');
       } else {
         clearInterval(intervalId);
+        updateStatus('⏸️ Auto refresh disattivato');
       }
     });
 
+    // Gestione visibilità pagina
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        console.log('App in background');
+      } else {
+        console.log('App in foreground');
+        if (wakeLock === null) {
+          requestWakeLock();
+        }
+      }
+    });
+
+    // Avvio iniziale
     loadSniper();
     intervalId = setInterval(loadSniper, 60000);
+    updateStatus('🚀 Crypto Sniper PWA avviato');
+
+    // Auto wake lock dopo 2 secondi + audio keep alive
+    setTimeout(() => {
+      requestWakeLock();
+      initAudioKeepAlive();
+    }, 2000);
   </script>
 </body>
-</html> 
+</html>
