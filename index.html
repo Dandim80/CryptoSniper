@@ -1,148 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crypto Sniper</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111; color: #eee; padding: 10px; }
+    h1 { text-align: center; }
+    select, button { margin: 5px; padding: 5px; }
+    .coin { padding: 10px; margin-bottom: 10px; background: #222; border-radius: 6px; cursor: pointer; }
+    .gain { color: lightgreen; font-weight: bold; }
+    .chart { margin-top: 10px; display: none; }
+  </style>
+</head>
+<body>
+  <h1>📈 Crypto Sniper</h1>
+  <label for="timeframe">Timeframe:</label>
+  <select id="timeframe">
+    <option value="1m">1 Min</option>
+    <option value="5m" selected>5 Min</option>
+    <option value="30m">30 Min</option>
+    <option value="1h">1 Ora</option>
+    <option value="4h">4 Ore</option>
+    <option value="1d">1 Giorno</option>
+    <option value="1w">1 Settimana</option>
+    <option value="1M">1 Mese</option>
+  </select>
+  <button onclick="loadSniper()">🔄 Ricarica Manuale</button>
+  <label><input type="checkbox" id="autoRefresh" checked> Ricarica Automatica</label>
+  <div id="results"></div>
 
-1	<!DOCTYPE html> 
-2	<html lang="en"> 
-3	<head> 
-4	  <meta charset="UTF-8" /> 
-5	  <meta name="viewport" content="width=device-width, initial-scale=1.0" /> 
-6	  <title>Crypto Sniper</title> 
-7	  <style> 
-8	    body { font-family: Arial, sans-serif; background: #111; color: #eee; padding: 10px; } 
-9	    h1 { text-align: center; } 
-10	    select, button { margin: 5px; padding: 5px; } 
-11	    .coin { padding: 10px; margin-bottom: 10px; background: #222; border-radius: 6px; cursor: pointer; } 
-12	    .gain { color: lightgreen; font-weight: bold; } 
-13	    .chart { margin-top: 10px; display: none; } 
-14	  </style> 
-15	</head> 
-16	<body> 
-17	  <h1>📈 Crypto Sniper</h1> 
-18	  <label for="timeframe">Timeframe:</label> 
-19	  <select id="timeframe"> 
-20	    <option value="1m">1 Min</option> 
-21	    <option value="5m" selected>5 Min</option> 
-22	    <option value="30m">30 Min</option> 
-23	    <option value="1h">1 Ora</option> 
-24	    <option value="4h">4 Ore</option> 
-25	    <option value="1d">1 Giorno</option> 
-26	    <option value="1w">1 Settimana</option> 
-27	    <option value="1M">1 Mese</option> 
-28	  </select> 
-29	  <button onclick="loadSniper()">🔄 Ricarica Manuale</button> 
-30	  <label><input type="checkbox" id="autoRefresh" checked> Ricarica Automatica</label> 
-31	  <div id="results"></div> 
-32	 
-33	  <script> 
-34	    const TELEGRAM_TOKEN = "7919987275:AAGeKy3A-ZtmYm4RZRDEb7MVz6JrOxx95Lc"; 
-35	    const TELEGRAM_CHAT_ID = "525164223"; 
-36	    let intervalId = null; 
-37	 
-38	    async function getSymbols() { 
-39	      const res = await fetch("https://api.binance.com/api/v3/exchangeInfo"); 
-40	      const data = await res.json(); 
-41	      return data.symbols.filter(s => s.symbol.endsWith("USDT") && s.status === "TRADING").map(s => s.symbol); 
-42	    } 
-43	 
-44	    async function getMaxGain(symbol, tf) { 
-45	      try { 
-46	        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=6`); 
-47	        const data = await res.json(); 
-48	        if (!data || data.length < 6) return null; 
-49	 
-50	        let maxGain = -Infinity; 
-51	        let bestCandle = null; 
-52	 
-53	        for (let i = 1; i <= 5; i++) { 
-54	          const open = parseFloat(data[i][1]); 
-55	          const close = parseFloat(data[i][4]); 
-56	          const gain = ((close - open) / open) * 100; 
-57	          if (gain > maxGain) { 
-58	            maxGain = gain; 
-59	            bestCandle = { 
-60	              symbol, 
-61	              gain: gain.toFixed(2), 
-62	              open, 
-63	              close, 
-64	              index: i 
-65	            }; 
-66	          } 
-67	        } 
-68	 
-69	        if (maxGain >= 3) { 
-70	          sendTelegramAlert(bestCandle, tf); 
-71	          return bestCandle; 
-72	        } else { 
-73	          return null; 
-74	        } 
-75	      } catch (e) { 
-76	        return null; 
-77	      } 
-78	    } 
-79	 
-80	    async function sendTelegramAlert(data, tf) { 
-81	      const message = `🚨 GAIN > 3%\n🔸 Coin: ${data.symbol}\n🔸 Timeframe: ${tf}\n🔸 Gain: ${data.gain}%\n🕒 Candela n° ${data.index + 1}\n🟢 Open: ${data.open}\n🔴 Close: ${data.close}`; 
-82	      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`; 
-83	      await fetch(url, { 
-84	        method: "POST", 
-85	        headers: { "Content-Type": "application/json" }, 
-86	        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message }) 
-87	      }); 
-88	    } 
-89	 
-90	    async function loadSniper() { 
-91	      const tf = document.getElementById("timeframe").value; 
-92	      const container = document.getElementById("results"); 
-93	      container.innerHTML = "⏳ Caricamento..."; 
-94	 
-95	      const symbols = await getSymbols(); 
-96	      const results = []; 
-97	 
-98	      for (const symbol of symbols.slice(0, 100)) { 
-99	        const data = await getMaxGain(symbol, tf); 
-100	        if (data) results.push(data); 
-101	        await new Promise(r => setTimeout(r, 100)); 
-102	      } 
-103	 
-104	      results.sort((a, b) => b.gain - a.gain); 
-105	      container.innerHTML = ""; 
-106	 
-107	      if (results.length === 0) { 
-108	        container.innerHTML = "Nessuna coin con gain superiore al 3%"; 
-109	        return; 
-110	      } 
-111	 
-112	      results.forEach(r => { 
-113	        const el = document.createElement("div"); 
-114	        el.className = "coin"; 
-115	        el.innerHTML = ` 
-116	          <div><strong>${r.symbol}</strong></div> 
-117	          <div>📊 Massimo Gain su 5 candele: <span class="gain">${r.gain}%</span></div> 
-118	          <div>🕒 Candela n° ${r.index + 1} (0 = più vecchia, 5 = attuale)</div> 
-119	          <div>🟢 Open: ${r.open} | 🔴 Close: ${r.close}</div> 
-120	          <div class="chart" id="chart-${r.symbol}"></div> 
-121	        `; 
-122	        el.addEventListener("click", () => { 
-123	          const chart = el.querySelector(".chart"); 
-124	          if (chart.innerHTML === "") { 
-125	            chart.innerHTML = `<iframe src='https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=BINANCE:${r.symbol}&width=100%25&height=200&locale=it&interval=${tf}&colorTheme=dark' width='100%' height='200' frameborder='0' allowtransparency='true' scrolling='no'></iframe>`; 
-126	          } 
-127	          chart.style.display = chart.style.display === "none" ? "block" : "none"; 
-128	        }); 
-129	        container.appendChild(el); 
-130	      }); 
-131	    } 
-132	 
-133	    document.getElementById("timeframe").addEventListener("change", loadSniper); 
-134	 
-135	    document.getElementById("autoRefresh").addEventListener("change", function () { 
-136	      if (this.checked) { 
-137	        intervalId = setInterval(loadSniper, 60000); 
-138	      } else { 
-139	        clearInterval(intervalId); 
-140	      } 
-141	    }); 
-142	 
-143	    loadSniper(); 
-144	    intervalId = setInterval(loadSniper, 60000); 
-145	  </script> 
-146	</body> 
-147	</html> 
+  <script>
+    const TELEGRAM_TOKEN = "7919987275:AAGeKy3A-ZtmYm4RZRDEb7MVz6JrOxx95Lc";
+    const TELEGRAM_CHAT_ID = "525164223";
+    let intervalId = null;
+
+    async function getSymbols() {
+      const res = await fetch("https://api.binance.com/api/v3/exchangeInfo");
+      const data = await res.json();
+      return data.symbols.filter(s => s.symbol.endsWith("USDT") && s.status === "TRADING").map(s => s.symbol);
+    }
+
+    async function getMaxGain(symbol, tf) {
+      try {
+        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=6`);
+        const data = await res.json();
+        if (!data || data.length < 6) return null;
+
+        let maxGain = -Infinity;
+        let bestCandle = null;
+
+        for (let i = 1; i <= 5; i++) {
+          const open = parseFloat(data[i][1]);
+          const close = parseFloat(data[i][4]);
+          const gain = ((close - open) / open) * 100;
+          if (gain > maxGain) {
+            maxGain = gain;
+            bestCandle = {
+              symbol,
+              gain: gain.toFixed(2),
+              open,
+              close,
+              index: i
+            };
+          }
+        }
+
+        if (maxGain >= 3) {
+          sendTelegramAlert(bestCandle, tf);
+          return bestCandle;
+        } else {
+          return null;
+        }
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function sendTelegramAlert(data, tf) {
+      const message = `🚨 GAIN > 3%\n🔸 Coin: ${data.symbol}\n🔸 Timeframe: ${tf}\n🔸 Gain: ${data.gain}%\n🕒 Candela n° ${data.index + 1}\n🟢 Open: ${data.open}\n🔴 Close: ${data.close}`;
+      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+      await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message })
+      });
+    }
+
+    async function loadSniper() {
+      const tf = document.getElementById("timeframe").value;
+      const container = document.getElementById("results");
+      container.innerHTML = "⏳ Caricamento...";
+
+      const symbols = await getSymbols();
+      const results = [];
+
+      for (const symbol of symbols.slice(0, 100)) {
+        const data = await getMaxGain(symbol, tf);
+        if (data) results.push(data);
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      results.sort((a, b) => b.gain - a.gain);
+      container.innerHTML = "";
+
+      if (results.length === 0) {
+        container.innerHTML = "Nessuna coin con gain superiore al 3%";
+        return;
+      }
+
+      results.forEach(r => {
+        const el = document.createElement("div");
+        el.className = "coin";
+        el.innerHTML = `
+          <div><strong>${r.symbol}</strong></div>
+          <div>📊 Massimo Gain su 5 candele: <span class="gain">${r.gain}%</span></div>
+          <div>🕒 Candela n° ${r.index + 1} (0 = più vecchia, 5 = attuale)</div>
+          <div>🟢 Open: ${r.open} | 🔴 Close: ${r.close}</div>
+          <div class="chart" id="chart-${r.symbol}"></div>
+        `;
+        el.addEventListener("click", () => {
+          const chart = el.querySelector(".chart");
+          if (chart.innerHTML === "") {
+            chart.innerHTML = `<iframe src='https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=BINANCE:${r.symbol}&width=100%25&height=200&locale=it&interval=${tf}&colorTheme=dark' width='100%' height='200' frameborder='0' allowtransparency='true' scrolling='no'></iframe>`;
+          }
+          chart.style.display = chart.style.display === "none" ? "block" : "none";
+        });
+        container.appendChild(el);
+      });
+    }
+
+    document.getElementById("timeframe").addEventListener("change", loadSniper);
+
+    document.getElementById("autoRefresh").addEventListener("change", function () {
+      if (this.checked) {
+        intervalId = setInterval(loadSniper, 60000);
+      } else {
+        clearInterval(intervalId);
+      }
+    });
+
+    loadSniper();
+    intervalId = setInterval(loadSniper, 60000);
+  </script>
+</body>
+</html> 
