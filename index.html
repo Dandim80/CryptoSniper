@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Crypto Sniper</title>
-  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ3J5cHRvIFNuaXBlciIsInNob3J0X25hbWUiOiJDcnlwdG9TbmlwZXIiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTExMTEiLCJ0aGVtZV9jb2xvciI6IiMyMjIyMjIiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTVRJNElpQm9aV2xuYUhROUlqRXlPQ0lpSUhacFpYZENiM2c5SWpBZ01DQXhNamdnTVRJNElpQm1hV3hzUFNJak16TXpJaUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lQZ284Y21WamRDQjNhV1IwYUQwaU1USTRMQ0FnSUdObGRtbDBhRDBpTVMwd0lHRmpiaTB6SWlCbWFXeHNQU0lqTWpJeUlpOCtQSFJsZUhRZ2VEMGlOalFpSUhrOUlqWTBJaUJtYVd4c1BTSWpSa1pHSWlCbWIyNTBMWE5wZW1VOUlqSTBJaUJtYjI1MExXWmhiV2xzZVQwaWJXOXViM053WVdObElpQjBaWGgwTFdGdVkyaHZjajBpYldsa1pHeGxJajQ0TDJSbFpuTStQQzl6ZG1jKyIsInNpemVzIjoiMTI4eDEyOCIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ3J5cHRvIFNuaXBlciIsInNob3J0X25hbWUiOiJDcnlwdG9TbmlwZXIiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTExMTEiLCJ0aGVtZV9jb2xvciI6IiMyMjIyMjIiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTVRJNElpQm9aV2xuYUhROUlqRXlPQ0lpSUhacFpYZENiM2c5SWpBZ01DQXhNamdnTVRJNElpQm1hV3hzUFNJak16TXpJaUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lQZ284Y21WamRDQjNhV1IwYUQwaU1USTRMQ0FnSUdObGRtbDBhRDBpTVMwd0lHRmpiaTB6SWlCbWFXeHNQU0lqTWpJeUlpOCtQSFJsZUhRZ2VEMGlOalFpSUhrOUlqWTBJaUJtYVd4c1BTSWpSa1pHSWlCbWIyNTBMWE5wZW1VOUlqSTBJaUJtYjI1MExXWmhiV2xzZVQwaWJXOXViM053WVdObElpQjBaWGgwTFdGdVkyaHZjajBpYldsa1pHeGxJajQ4TDJSbFpuTStQQzl6ZG1jKyIsInNpemVzIjoiMTI4eDEyOCIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
   <meta name="theme-color" content="#222222">
   <style>
     body { 
@@ -70,6 +70,28 @@
     .status.active {
       background: linear-gradient(90deg, #00ff88, #00cc66);
       color: #000;
+    }
+    .tradingview-link {
+      display: inline-block;
+      background: #1e88e5;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 12px;
+      margin-top: 8px;
+      transition: background 0.3s;
+    }
+    .tradingview-link:hover {
+      background: #1976d2;
+    }
+    .screenshot-note {
+      background: #444;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-top: 8px;
+      color: #aaa;
     }
     @media (max-width: 768px) {
       .controls {
@@ -184,6 +206,26 @@
       return data.symbols.filter(s => s.symbol.endsWith("USDT") && s.status === "TRADING").map(s => s.symbol);
     }
 
+    function getTradingViewInterval(binanceInterval) {
+      const intervalMap = {
+        '1m': '1',
+        '5m': '5',
+        '15m': '15',
+        '30m': '30',
+        '1h': '60',
+        '4h': '240',
+        '1d': '1D',
+        '1w': '1W',
+        '1M': '1M'
+      };
+      return intervalMap[binanceInterval] || '5';
+    }
+
+    function createTradingViewUrl(symbol, interval) {
+      const tvInterval = getTradingViewInterval(interval);
+      return `https://www.tradingview.com/chart/?symbol=BINANCE:${symbol}&interval=${tvInterval}`;
+    }
+
     async function getMaxGain(symbol, tf) {
       try {
         const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=6`);
@@ -205,7 +247,8 @@
               open,
               close,
               index: i,
-              timestamp: new Date(data[i][0]).toLocaleTimeString()
+              timestamp: new Date(data[i][0]).toLocaleTimeString(),
+              tradingViewUrl: createTradingViewUrl(symbol, tf)
             };
           }
         }
@@ -223,7 +266,8 @@
     }
 
     async function sendTelegramAlert(data, tf) {
-      const message = `🚨 CRYPTO SNIPER ALERT 🚨\n\n🔸 Coin: ${data.symbol}\n🔸 Timeframe: ${tf}\n🔸 Gain: ${data.gain}%\n🕒 Candela n° ${data.index + 1}\n🟢 Open: ${data.open}\n🔴 Close: ${data.close}\n⏰ Timestamp: ${data.timestamp}`;
+      const message = `🚨 CRYPTO SNIPER ALERT 🚨\n\n🔸 Coin: ${data.symbol}\n🔸 Timeframe: ${tf}\n🔸 Gain: ${data.gain}%\n🕒 Candela n° ${data.index + 1}\n🟢 Open: ${data.open}\n🔴 Close: ${data.close}\n⏰ Timestamp: ${data.timestamp}\n\n📊 TradingView: ${data.tradingViewUrl}\n\n💡 Suggerimento: Apri il link TradingView e fai uno screenshot manuale del grafico per analisi dettagliata.`;
+      
       const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
       
       try {
@@ -233,7 +277,8 @@
           body: JSON.stringify({ 
             chat_id: TELEGRAM_CHAT_ID, 
             text: message,
-            parse_mode: 'HTML'
+            parse_mode: 'HTML',
+            disable_web_page_preview: false
           })
         });
         console.log('Alert inviato per', data.symbol);
@@ -284,15 +329,22 @@
               <div>📊 Massimo Gain: <span class="gain">+${r.gain}%</span></div>
               <div>🕒 Candela n° ${r.index + 1} | ⏰ ${r.timestamp}</div>
               <div>🟢 Open: ${r.open} | 🔴 Close: ${r.close}</div>
+              <a href="${r.tradingViewUrl}" target="_blank" class="tradingview-link">📊 Apri TradingView</a>
+              <div class="screenshot-note">
+                💡 <strong>Per screenshot:</strong> Clicca il link TradingView sopra, attendi il caricamento del grafico, poi fai uno screenshot manuale del timeframe ${tf}.
+              </div>
               <div class="chart" id="chart-${r.symbol}"></div>
             `;
             
-            el.addEventListener("click", () => {
-              const chart = el.querySelector(".chart");
-              if (chart.innerHTML === "") {
-                chart.innerHTML = `<iframe src='https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=BINANCE:${r.symbol}&width=100%25&height=200&locale=it&interval=${tf}&colorTheme=dark' width='100%' height='200' frameborder='0' allowtransparency='true' scrolling='no'></iframe>`;
+            el.addEventListener("click", (e) => {
+              // Evita di attivare il click se si clicca sul link TradingView
+              if (e.target.tagName !== 'A') {
+                const chart = el.querySelector(".chart");
+                if (chart.innerHTML === "") {
+                  chart.innerHTML = `<iframe src='https://s.tradingview.com/embed-widget/mini-symbol-overview/?symbol=BINANCE:${r.symbol}&width=100%25&height=200&locale=it&interval=${tf}&colorTheme=dark' width='100%' height='200' frameborder='0' allowtransparency='true' scrolling='no'></iframe>`;
+                }
+                chart.style.display = chart.style.display === "none" ? "block" : "none";
               }
-              chart.style.display = chart.style.display === "none" ? "block" : "none";
             });
             
             container.appendChild(el);
