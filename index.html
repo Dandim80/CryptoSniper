@@ -14,7 +14,9 @@
       padding: 10px; 
       margin: 0;
     }
-    h1, h2, h3 { text-align: center; }
+    h1, h2, h3 { 
+      text-align: center; 
+    }
     .controls {
       display: flex;
       flex-wrap: wrap;
@@ -24,8 +26,8 @@
       justify-content: center;
     }
     select, button { 
-      margin: 5px; 
-      padding: 8px 12px; 
+      margin: 5px;
+      padding: 8px 12px;
       background: #333;
       color: #eee;
       border: 1px solid #555;
@@ -49,7 +51,7 @@
       background: linear-gradient(90deg, #00ff88, #00cc66);
       color: #000;
     }
-    /* L'area dei risultati è qui utilizzata per eventuali log (opzionale) */
+    /* L'area dei risultati contiene eventualmente dei log */
     #results {
       padding: 10px;
       margin-top: 20px;
@@ -62,7 +64,7 @@
   <h1>📈 Crypto Sniper Enhanced</h1>
   
   <div class="status" id="status">
-    🔄 Inizializzazione...
+    ⏸ In attesa di avvio...
   </div>
   
   <div class="controls">
@@ -77,7 +79,8 @@
       <option value="1w">1 Settimana</option>
       <option value="1M">1 Mese</option>
     </select>
-    <button onclick="restartCycle()">🔄 Ricarica Manuale</button>
+    <!-- Il pulsante ora attende il click per avviare l'analisi -->
+    <button onclick="restartCycle()">▶ Avvia Analisi</button>
     <button onclick="requestWakeLock()">🔒 Mantieni Attivo</button>
     <button onclick="clearSpamFilter()">🗑️ Reset Filtro Spam</button>
   </div>
@@ -104,17 +107,16 @@
     // FUNZIONI DI SUPPORTO
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     
-    // Rileva se il dispositivo è mobile
     function isMobile() {
       return /Mobi|Android|iPhone/i.test(navigator.userAgent);
     }
     
-    // Service Worker Registration (per eventuali funzionalità PWAs)
+    // Registrazione del Service Worker (per eventuali funzionalità PWA)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('data:application/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBpbnN0YWxsZWQnKTsKfSk7CgpzZWxmLmFkZEV2ZW50TGlzdGVuZXIoJ2FjdGl2YXRlJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBhY3RpdmF0ZWQnKTsKfSk7');
     }
     
-    // Sistema anti-spam: tiene traccia degli alert già inviati (per 4 ore)
+    // Sistema anti-spam (tenendo traccia degli alert degli ultimi 4 ore)
     let sentAlerts = new Map();
     function canSendAlert(symbol) {
       const now = Date.now();
@@ -132,14 +134,14 @@
       setTimeout(() => updateStatus('✅ Sistema pronto'), 2000);
     }
     
-    // Aggiorna il messaggio di stato (qui viene usato per visualizzare la percentuale e il tempo)
+    // Aggiorna lo status visualizzato, includendo la percentuale di avanzamento e il tempo trascorso
     function updateStatus(message) {
       const statusEl = document.getElementById('status');
       statusEl.textContent = message;
       statusEl.className = isRunning ? 'status active' : 'status';
     }
     
-    // Funzioni per il Wake Lock e l’audio keep-alive (per mantenere attiva l’app)
+    // Funzioni per il Wake Lock e l’Audio Keep Alive
     async function requestWakeLock() {
       try {
         if ('wakeLock' in navigator) {
@@ -177,7 +179,7 @@
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // URL e TIMEFRAME per TradingView / Exchange
+    // URL DI TRADINGVIEW ED EXCHANGE
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     function getTradingViewInterval(interval) {
       const intervalMap = {
@@ -199,14 +201,14 @@
     }
     function createExchangeUrl(symbol, exchange) {
       if (exchange.toLowerCase() === 'binance') {
-        // Se il simbolo contiene "USDC" verrà gestito il replace; altrimenti viene lasciato così
+        // Se nel simbolo è presente "USDC" viene eseguito un replace (se presente)
         const baseAsset = symbol.replace("USDC", "");
-        if (isMobile()){
+        if(isMobile()){
           return `binance://trade?market=${baseAsset}_USDC`;
         }
         return `https://www.binance.com/en/trade/${baseAsset}_USDC`;
       } else if (exchange.toLowerCase() === 'bybit') {
-        if (isMobile()){
+        if(isMobile()){
           return `bybit://trade/spot?symbol=${symbol}`;
         }
         return `https://www.bybit.com/en/trade/spot/${symbol}`;
@@ -215,10 +217,8 @@
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // FUNZIONI DI ANALISI DELLE CANDELE
+    // ANALISI DELLE CANDELE (BINANCE E BYBIT)
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    
-    // Analisi candela per Binance (usa klines; verifica gain >= 3%)
     async function getBinanceMaxGain(symbol, tf) {
       try {
         const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=6`);
@@ -259,7 +259,6 @@
       }
     }
     
-    // Analisi candela per Bybit (usa klines; verifica gain >= 3%)
     async function getBybitMaxGain(symbol, tf) {
       try {
         const bybitInterval = getTradingViewInterval(tf).toLowerCase();
@@ -304,7 +303,6 @@
       }
     }
     
-    // Invia l’alert Telegram con i dettagli della candela rilevata
     async function sendTelegramAlert(data, tf) {
       const exchangeIcon = data.exchange === 'bybit' ? '🟠' : '🟡';
       const exchangeName = data.exchange === 'bybit' ? 'BYBIT' : 'BINANCE';
@@ -345,7 +343,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // RECUPERO COMPLETO DEL MERCATO SPOT (tutti i simboli in "TRADING")
+    // RECUPERO COMPLETO DEL MERCATO SPOT (TUTTI I SIMBOLI CON STATUS "TRADING")
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     async function getBinanceSymbolListForSniper() {
       try {
@@ -378,19 +376,17 @@ ${exchangeIcon} Exchange: ${exchangeName}
     async function cycleProcessing() {
       const tf = document.getElementById("timeframe").value;
       
-      // Se non abbiamo già caricato tutti i simboli, ricaricali
+      // Se l'elenco dei simboli non è già stato caricato, lo carichiamo
       if (allSymbols.length === 0) {
         const [bnSymbols, bySymbols] = await Promise.all([
           getBinanceSymbolListForSniper(),
           getBybitSymbolListForSniper()
         ]);
-        // Combina i simboli da entrambi gli exchange
         allSymbols = bnSymbols.map(s => ({ exchange: 'binance', symbol: s }))
                      .concat(bySymbols.map(s => ({ exchange: 'bybit', symbol: s })));
         console.log(`Totale simboli caricati: ${allSymbols.length}`);
       }
       
-      // Imposta il ciclo
       currentIndex = 0;
       cycleStartTime = new Date();
       updateStatus(`Inizio ciclo: 0/${allSymbols.length} elaborati.`);
@@ -408,7 +404,6 @@ ${exchangeIcon} Exchange: ${exchangeName}
         } else if (coin.exchange === 'bybit') {
           await getBybitMaxGain(coin.symbol, tf);
         }
-        // Aggiorna il progresso
         const processedCount = currentIndex + i + 1;
         const percentage = ((processedCount / totalSymbols) * 100).toFixed(1);
         const elapsedSec = Math.floor((new Date() - cycleStartTime) / 1000);
@@ -416,20 +411,18 @@ ${exchangeIcon} Exchange: ${exchangeName}
         await new Promise(r => setTimeout(r, 60));
       }
       
-      // Aggiorna il puntatore ed esegue il prossimo batch (se presente)
       currentIndex += batchSize;
       if (currentIndex < totalSymbols) {
         await processBatch(tf);
       } else {
         const totalElapsedSec = Math.floor((new Date() - cycleStartTime) / 1000);
         updateStatus(`Ciclo completato in ${totalElapsedSec} secondi. Riavvio ciclo...`);
-        // Opzionalmente ricarica l’elenco per aggiornare i dati
         allSymbols = [];
         setTimeout(cycleProcessing, 3000);
       }
     }
     
-    // Permette di riavviare manualmente il ciclo
+    // Permette di avviare o riavviare manualmente il ciclo
     function restartCycle() {
       allSymbols = [];
       currentIndex = 0;
@@ -443,10 +436,9 @@ ${exchangeIcon} Exchange: ${exchangeName}
       }
     });
     
-    // Avvio iniziale
-    cycleProcessing();
-    requestWakeLock();
-    initAudioKeepAlive();
+    // NOTA: Ora il ciclo non parte automaticamente al caricamento della pagina.
+    // Il processo di analisi partirà solo quando clicchi il pulsante "▶ Avvia Analisi".
+    // In questo modo potrai scegliere il timeframe e avviare il processo manualmente.
   </script>
 </body>
 </html>
