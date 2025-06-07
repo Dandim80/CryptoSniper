@@ -229,7 +229,7 @@
     </div>
     <details id="binance-details" open>
       <summary>
-        Binance (USDC) - Ordinato per volume (proxy per capitalizzazione)
+        Binance - Mercato Spot Completo (ordinato per volume)
         <label style="margin-left: 10px;">
           <input type="checkbox" id="select-all-binance"> Seleziona tutto
         </label>
@@ -240,7 +240,7 @@
     </details>
     <details id="bybit-details" open>
       <summary>
-        Bybit (USDT) - Ordinato per volume (proxy per capitalizzazione)
+        Bybit - Mercato Spot Completo (ordinato per volume)
         <label style="margin-left: 10px;">
           <input type="checkbox" id="select-all-bybit"> Seleziona tutto
         </label>
@@ -348,26 +348,29 @@
       statusEl.className = isRunning ? 'status active' : 'status';
     }
 
-    // Recupero simboli e ticker per le liste di selezione
+    // RECUPERO SIMBOLI – Ora per l'intero mercato spot
+
+    // Binance: utilizziamo l'endpoint ticker 24hr, senza filtrare per un particolare quote
     async function loadBinanceSymbolList() {
       try {
         const res = await fetch("https://api.binance.com/api/v3/ticker/24hr");
         const data = await res.json();
-        const symbols = data.filter(item => item.symbol.endsWith("USDC"));
-        symbols.sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume));
-        return symbols;
+        // Ordina per quoteVolume (proxy per capitalizzazione)
+        data.sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume));
+        return data;
       } catch (e) {
         console.error("Errore nel caricamento dei ticker Binance:", e);
         return [];
       }
     }
 
+    // Bybit: recupera tutti i ticker spot
     async function loadBybitSymbolList() {
       try {
         const res = await fetch("https://api.bybit.com/v5/market/tickers?category=spot");
         const data = await res.json();
         if (data.retCode === 0 && data.result && data.result.list) {
-          let symbols = data.result.list.filter(item => item.symbol.endsWith("USDT"));
+          let symbols = data.result.list;
           symbols.sort((a, b) => parseFloat(b.volume24h || 0) - parseFloat(a.volume24h || 0));
           return symbols;
         }
@@ -378,6 +381,50 @@
       }
     }
 
+    // Popola la sezione di selezione dei simboli
+    async function populateSymbolSelection() {
+      const binanceContainer = document.getElementById("binance-symbols-list");
+      const bybitContainer = document.getElementById("bybit-symbols-list");
+      binanceContainer.innerHTML = "<p>Caricamento simboli Binance...</p>";
+      bybitContainer.innerHTML = "<p>Caricamento simboli Bybit...</p>";
+
+      const bnSymbols = await loadBinanceSymbolList();
+      binanceContainer.innerHTML = "";
+      bnSymbols.forEach(item => {
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.name = "binance-symbol";
+        checkbox.value = item.symbol;
+        checkbox.id = "binance-" + item.symbol;
+        const label = document.createElement("label");
+        label.htmlFor = checkbox.id;
+        label.innerHTML = `${item.symbol} (${parseFloat(item.priceChangePercent).toFixed(2)}%)`;
+        const wrapper = document.createElement("div");
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(label);
+        binanceContainer.appendChild(wrapper);
+      });
+
+      const bySymbols = await loadBybitSymbolList();
+      bybitContainer.innerHTML = "";
+      bySymbols.forEach(item => {
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.name = "bybit-symbol";
+        checkbox.value = item.symbol;
+        checkbox.id = "bybit-" + item.symbol;
+        const label = document.createElement("label");
+        label.htmlFor = checkbox.id;
+        const pct = item.price24hPcnt ? parseFloat(item.price24hPcnt * 100).toFixed(2) : "0.00";
+        label.innerHTML = `${item.symbol} (${pct}%)`;
+        const wrapper = document.createElement("div");
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(label);
+        bybitContainer.appendChild(wrapper);
+      });
+    }
+
+    // Funzione per creare URL TradingView
     function getTradingViewInterval(interval) {
       const intervalMap = {
         '1m': '1',
@@ -398,9 +445,10 @@
       return `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`;
     }
 
+    // Funzione per creare link agli exchange (deep linking in mobile se supportato)
     function createExchangeUrl(symbol, exchange) {
       if (exchange.toLowerCase() === 'binance') {
-        const baseAsset = symbol.replace("USDC", "");
+        const baseAsset = symbol.replace("USDC", "");  // Per Binance questo potrebbe variare; qui viene lasciato il replace se presente
         if(isMobile()){
           return `binance://trade?market=${baseAsset}_USDC`;
         }
@@ -414,6 +462,7 @@
       return '#';
     }
 
+    // BINANCE - Analisi candele (utilizza il simbolo passato)
     async function getBinanceMaxGain(symbol, tf) {
       try {
         const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=6`);
@@ -454,6 +503,7 @@
       }
     }
 
+    // BYBIT - Analisi candele (utilizza il simbolo passato)
     async function getBybitMaxGain(symbol, tf) {
       try {
         const bybitInterval = getTradingViewInterval(tf).toLowerCase();
@@ -521,6 +571,7 @@
       }
     }
 
+    // Funzione di scansione automatica (analizza tutte le coppie con gain > 3%)
     async function loadSniper() {
       const tf = document.getElementById("timeframe").value;
       const container = document.getElementById("results");
@@ -532,7 +583,7 @@
           getBinanceSymbolListForSniper(),
           getBybitSymbolListForSniper()
         ]);
-        console.log(`Trovati ${binanceSymbols.length} simboli Binance USDC e ${bybitSymbols.length} simboli Bybit USDT`);
+        console.log(`Trovati ${binanceSymbols.length} simboli Binance e ${bybitSymbols.length} simboli Bybit`);
         const results = [];
         let processed = 0;
         const totalSymbols = Math.min(binanceSymbols.length, 75) + Math.min(bybitSymbols.length, 75);
@@ -562,7 +613,7 @@
             el.className = `coin ${r.exchange}`;
             el.innerHTML = `
               <div class="exchange-badge ${r.exchange}">${r.exchange.toUpperCase()}</div>
-              <div><strong>💰 ${r.symbol}</strong> ${r.exchange === 'bybit' ? '(USDT)' : '(USDC)'}</div>
+              <div><strong>💰 ${r.symbol}</strong> ${r.exchange === 'bybit' ? '' : ''}</div>
               <div>📊 Massimo Gain: <span class="gain">+${r.gain}%</span></div>
               <div>🕒 Candela n° ${r.index + 1} | ⏰ ${r.timestamp}</div>
               <div>🟢 Open: ${r.open} | 🔴 Close: ${r.close}</div>
@@ -596,7 +647,7 @@
       try {
         const res = await fetch("https://api.binance.com/api/v3/exchangeInfo");
         const data = await res.json();
-        return data.symbols.filter(s => s.symbol.endsWith("USDC") && s.status === "TRADING").map(s => s.symbol);
+        return data.symbols.filter(s => s.status === "TRADING").map(s => s.symbol);
       } catch (e) {
         console.error("Errore ciclo Binance per sniper:", e);
         return [];
@@ -608,7 +659,7 @@
         const res = await fetch("https://api.bybit.com/v5/market/instruments-info?category=spot");
         const data = await res.json();
         if (data.retCode === 0 && data.result && data.result.list) {
-          return data.result.list.filter(s => s.symbol.endsWith("USDT") && s.status === "Trading").map(s => s.symbol);
+          return data.result.list.filter(s => s.status === "Trading").map(s => s.symbol);
         }
         return [];
       } catch (error) {
@@ -656,7 +707,7 @@
           el.className = `coin ${r.exchange}`;
           el.innerHTML = `
             <div class="exchange-badge ${r.exchange}">${r.exchange.toUpperCase()}</div>
-            <div><strong>💰 ${r.symbol}</strong> ${r.exchange === 'bybit' ? '(USDT)' : '(USDC)'}</div>
+            <div><strong>💰 ${r.symbol}</strong> ${r.exchange === 'bybit' ? '' : ''}</div>
             <div>📊 Massimo Gain: <span class="gain">+${r.gain}%</span></div>
             <div>🕒 Candela n° ${r.index + 1} | ⏰ ${r.timestamp}</div>
             <div>🟢 Open: ${r.open} | 🔴 Close: ${r.close}</div>
@@ -681,6 +732,7 @@
       isRunning = false;
     }
 
+    // Event listeners
     document.getElementById("timeframe").addEventListener("change", loadSniper);
     document.getElementById("autoRefresh").addEventListener("change", function () {
       if (this.checked) {
