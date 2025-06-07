@@ -141,7 +141,7 @@
       statusEl.className = isRunning ? 'status active' : 'status';
     }
     
-    // Funzioni per il Wake Lock e l’Audio Keep Alive
+    // Funzioni per il Wake Lock e l’audio keep-alive
     async function requestWakeLock() {
       try {
         if ('wakeLock' in navigator) {
@@ -201,7 +201,7 @@
     }
     function createExchangeUrl(symbol, exchange) {
       if (exchange.toLowerCase() === 'binance') {
-        // Se nel simbolo è presente "USDC" viene eseguito un replace (se presente)
+        // Se nel simbolo è presente "USDC" verrà gestito; in ogni caso il simbolo già corrisponde, poiché filtriamo solo quelle
         const baseAsset = symbol.replace("USDC", "");
         if(isMobile()){
           return `binance://trade?market=${baseAsset}_USDC`;
@@ -343,13 +343,14 @@ ${exchangeIcon} Exchange: ${exchangeName}
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // RECUPERO COMPLETO DEL MERCATO SPOT (TUTTI I SIMBOLI CON STATUS "TRADING")
+    // RECUPERO DEL MERCATO SPOT – SOLO Coppie USDC per Binance e USDT per Bybit
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     async function getBinanceSymbolListForSniper() {
       try {
         const res = await fetch("https://api.binance.com/api/v3/exchangeInfo");
         const data = await res.json();
-        return data.symbols.filter(s => s.status === "TRADING").map(s => s.symbol);
+        // Filtra solo simboli che terminano con USDC e con stato TRADING
+        return data.symbols.filter(s => s.symbol.endsWith("USDC") && s.status === "TRADING").map(s => s.symbol);
       } catch (e) {
         console.error("Errore ciclo Binance per sniper:", e);
         return [];
@@ -361,7 +362,8 @@ ${exchangeIcon} Exchange: ${exchangeName}
         const res = await fetch("https://api.bybit.com/v5/market/instruments-info?category=spot");
         const data = await res.json();
         if (data.retCode === 0 && data.result && data.result.list) {
-          return data.result.list.filter(s => s.status === "Trading").map(s => s.symbol);
+          // Filtra solo simboli che terminano con USDT e con stato Trading
+          return data.result.list.filter(s => s.symbol.endsWith("USDT") && s.status === "Trading").map(s => s.symbol);
         }
         return [];
       } catch (error) {
@@ -376,7 +378,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
     async function cycleProcessing() {
       const tf = document.getElementById("timeframe").value;
       
-      // Se l'elenco dei simboli non è già stato caricato, lo carichiamo
+      // Carica l’elenco dei simboli (filtrati per USDC/USDT)
       if (allSymbols.length === 0) {
         const [bnSymbols, bySymbols] = await Promise.all([
           getBinanceSymbolListForSniper(),
@@ -422,7 +424,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
       }
     }
     
-    // Permette di avviare o riavviare manualmente il ciclo
+    // Permette di avviare o riavviare manualmente il ciclo (avviene con il click su "▶ Avvia Analisi")
     function restartCycle() {
       allSymbols = [];
       currentIndex = 0;
@@ -436,9 +438,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
       }
     });
     
-    // NOTA: Ora il ciclo non parte automaticamente al caricamento della pagina.
-    // Il processo di analisi partirà solo quando clicchi il pulsante "▶ Avvia Analisi".
-    // In questo modo potrai scegliere il timeframe e avviare il processo manualmente.
+    // NOTA: Al caricamento della pagina il ciclo non parte, ma solo quando si clicca "▶ Avvia Analisi".
   </script>
 </body>
 </html>
