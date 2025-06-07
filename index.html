@@ -14,9 +14,7 @@
       padding: 10px; 
       margin: 0;
     }
-    h1, h2, h3 { 
-      text-align: center; 
-    }
+    h1, h2, h3 { text-align: center; }
     .controls {
       display: flex;
       flex-wrap: wrap;
@@ -25,7 +23,7 @@
       align-items: center;
       justify-content: center;
     }
-    select, button { 
+    select, input[type="number"], button { 
       margin: 5px;
       padding: 8px 12px;
       background: #333;
@@ -37,9 +35,7 @@
       cursor: pointer;
       transition: background 0.3s;
     }
-    button:hover {
-      background: #444;
-    }
+    button:hover { background: #444; }
     .status {
       background: #333;
       padding: 10px;
@@ -51,12 +47,60 @@
       background: linear-gradient(90deg, #00ff88, #00cc66);
       color: #000;
     }
-    /* L'area dei risultati contiene eventualmente dei log */
+    /* L'area dei risultati contiene i record delle coppie approvate */
     #results {
       padding: 10px;
       margin-top: 20px;
       background: #222;
       border-radius: 6px;
+    }
+    .coin {
+      padding: 15px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #222, #333);
+      border-radius: 8px;
+      cursor: pointer;
+      border-left: 4px solid #00ff88;
+      transition: transform 0.2s;
+    }
+    .coin.bybit { border-left-color: #f7931a; }
+    .coin.binance { border-left-color: #f3ba2f; }
+    .coin:hover { transform: translateX(5px); }
+    .gain { color: #00ff88; font-weight: bold; font-size: 1.2em; }
+    .exchange-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .exchange-badge.bybit { background: #f7931a; color: #000; }
+    .exchange-badge.binance { background: #f3ba2f; color: #000; }
+    .tradingview-link, .exchange-link {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 12px;
+      margin: 4px 8px 4px 0;
+      transition: background 0.3s;
+    }
+    .tradingview-link { background: #1e88e5; color: white; }
+    .tradingview-link:hover { background: #1976d2; }
+    .exchange-link { background: #4caf50; color: white; }
+    .exchange-link:hover { background: #45a049; }
+    .exchange-link.binance { background: #f3ba2f; color: #000; }
+    .exchange-link.binance:hover { background: #d4a027; }
+    .exchange-link.bybit { background: #f7931a; color: #000; }
+    .exchange-link.bybit:hover { background: #d97e15; }
+    .screenshot-note {
+      background: #444;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-top: 8px;
+      color: #aaa;
     }
   </style>
 </head>
@@ -79,12 +123,15 @@
       <option value="1w">1 Settimana</option>
       <option value="1M">1 Mese</option>
     </select>
-    <!-- Il pulsante ora attende il click per avviare l'analisi -->
+    <label for="threshold">Soglia Gain (%):</label>
+    <input type="number" id="threshold" value="3.0" step="0.1" min="0" />
+    <!-- Il processo parte solo al click -->
     <button onclick="restartCycle()">▶ Avvia Analisi</button>
     <button onclick="requestWakeLock()">🔒 Mantieni Attivo</button>
     <button onclick="clearSpamFilter()">🗑️ Reset Filtro Spam</button>
   </div>
   
+  <!-- Qui verranno visualizzate le coppie che superano la soglia -->
   <div id="results"></div>
 
   <script>
@@ -98,9 +145,9 @@
     let isRunning = false;
     
     // Per il ciclo di elaborazione in batch
-    let allSymbols = [];   // Array di oggetti { exchange: "binance/bybit", symbol: "XYZ" }
-    let currentIndex = 0;  // Indice del simbolo da elaborare
-    const batchSize = 150; // Elaborazione 150 coin per batch
+    let allSymbols = [];   // Array di oggetti { exchange: "binance" o "bybit", symbol: "XYZ" }
+    let currentIndex = 0;  // Indice del simbolo corrente
+    const batchSize = 150; // Elaborazione per batch di 150 coin
     let cycleStartTime = null; // Tempo di inizio ciclo
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
@@ -111,12 +158,12 @@
       return /Mobi|Android|iPhone/i.test(navigator.userAgent);
     }
     
-    // Registrazione del Service Worker (per eventuali funzionalità PWA)
+    // Registrazione del Service Worker per eventuali funzionalità PWA
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('data:application/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBpbnN0YWxsZWQnKTsKfSk7CgpzZWxmLmFkZEV2ZW50TGlzdGVuZXIoJ2FjdGl2YXRlJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBhY3RpdmF0ZWQnKTsKfSk7');
     }
     
-    // Sistema anti-spam (tenendo traccia degli alert degli ultimi 4 ore)
+    // Sistema anti-spam: tiene traccia degli alert inviati nelle ultime 4 ore
     let sentAlerts = new Map();
     function canSendAlert(symbol) {
       const now = Date.now();
@@ -134,14 +181,14 @@
       setTimeout(() => updateStatus('✅ Sistema pronto'), 2000);
     }
     
-    // Aggiorna lo status visualizzato, includendo la percentuale di avanzamento e il tempo trascorso
+    // Aggiorna lo status con procentuale e tempo trascorso
     function updateStatus(message) {
       const statusEl = document.getElementById('status');
       statusEl.textContent = message;
       statusEl.className = isRunning ? 'status active' : 'status';
     }
     
-    // Funzioni per il Wake Lock e l’audio keep-alive
+    // Funzioni per Wake Lock e Audio Keep Alive
     async function requestWakeLock() {
       try {
         if ('wakeLock' in navigator) {
@@ -201,7 +248,6 @@
     }
     function createExchangeUrl(symbol, exchange) {
       if (exchange.toLowerCase() === 'binance') {
-        // Se nel simbolo è presente "USDC" verrà gestito; in ogni caso il simbolo già corrisponde, poiché filtriamo solo quelle
         const baseAsset = symbol.replace("USDC", "");
         if(isMobile()){
           return `binance://trade?market=${baseAsset}_USDC`;
@@ -219,7 +265,7 @@
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     // ANALISI DELLE CANDELE (BINANCE E BYBIT)
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    async function getBinanceMaxGain(symbol, tf) {
+    async function getBinanceMaxGain(symbol, tf, threshold) {
       try {
         const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=6`);
         const data = await res.json();
@@ -245,7 +291,7 @@
             };
           }
         }
-        if (maxGain >= 3) {
+        if (maxGain >= threshold) {
           if (canSendAlert(symbol)) {
             sendTelegramAlert(bestCandle, tf);
           }
@@ -259,7 +305,7 @@
       }
     }
     
-    async function getBybitMaxGain(symbol, tf) {
+    async function getBybitMaxGain(symbol, tf, threshold) {
       try {
         const bybitInterval = getTradingViewInterval(tf).toLowerCase();
         const res = await fetch(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${symbol}&interval=${bybitInterval}&limit=6`);
@@ -289,7 +335,7 @@
             };
           }
         }
-        if (maxGain >= 3) {
+        if (maxGain >= threshold) {
           if (canSendAlert(`BYBIT_${symbol}`)) {
             sendTelegramAlert(bestCandle, tf);
           }
@@ -343,14 +389,15 @@ ${exchangeIcon} Exchange: ${exchangeName}
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // RECUPERO DEL MERCATO SPOT – SOLO Coppie USDC per Binance e USDT per Bybit
+    // RECUPERO DEL MERCATO SPOT FILTRATO – SOLO Coppie USDC per Binance e USDT per Bybit
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     async function getBinanceSymbolListForSniper() {
       try {
         const res = await fetch("https://api.binance.com/api/v3/exchangeInfo");
         const data = await res.json();
-        // Filtra solo simboli che terminano con USDC e con stato TRADING
-        return data.symbols.filter(s => s.symbol.endsWith("USDC") && s.status === "TRADING").map(s => s.symbol);
+        return data.symbols
+                 .filter(s => s.symbol.endsWith("USDC") && s.status === "TRADING")
+                 .map(s => s.symbol);
       } catch (e) {
         console.error("Errore ciclo Binance per sniper:", e);
         return [];
@@ -362,8 +409,9 @@ ${exchangeIcon} Exchange: ${exchangeName}
         const res = await fetch("https://api.bybit.com/v5/market/instruments-info?category=spot");
         const data = await res.json();
         if (data.retCode === 0 && data.result && data.result.list) {
-          // Filtra solo simboli che terminano con USDT e con stato Trading
-          return data.result.list.filter(s => s.symbol.endsWith("USDT") && s.status === "Trading").map(s => s.symbol);
+          return data.result.list
+                   .filter(s => s.symbol.endsWith("USDT") && s.status === "Trading")
+                   .map(s => s.symbol);
         }
         return [];
       } catch (error) {
@@ -373,12 +421,43 @@ ${exchangeIcon} Exchange: ${exchangeName}
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // CICLO DI ELABORAZIONE A BATCH
+    // CICLO DI ELABORAZIONE A BATCH CON RISULTATI IN TEMPO REALE
     // ––––––––––––––––––––––––––––––––––––––––––––––––
+    // Appende una coppia approvata nella sezione "results"
+    function appendResult(candle) {
+      const container = document.getElementById("results");
+      const el = document.createElement("div");
+      el.className = `coin ${candle.exchange}`;
+      el.innerHTML = `
+        <div class="exchange-badge ${candle.exchange}">${candle.exchange.toUpperCase()}</div>
+        <div><strong>💰 ${candle.symbol}</strong> ${candle.exchange === 'bybit' ? '(USDT)' : '(USDC)'}</div>
+        <div>📊 Gain: <span class="gain">+${candle.gain}%</span></div>
+        <div>🕒 Candela n° ${candle.index + 1} | ⏰ ${candle.timestamp}</div>
+        <div>🟢 Open: ${candle.open} | 🔴 Close: ${candle.close}</div>
+        <div style="margin-top: 10px;">
+          <a href="${createTradingViewUrl(candle.symbol, '1d', candle.exchange.toUpperCase())}" target="_blank" class="tradingview-link">📊 TradingView</a>
+          <a href="${candle.exchangeUrl}" target="_blank" class="exchange-link ${candle.exchange}">🔗 ${candle.exchange.toUpperCase()} Trading</a>
+        </div>
+        <div class="screenshot-note">
+          💡 TradingView si apre in modalità completa per analisi avanzata.
+        </div>
+      `;
+      el.addEventListener("click", (e) => {
+        if (e.target.tagName !== 'A') {
+          window.open(createTradingViewUrl(candle.symbol, '1d', candle.exchange.toUpperCase()), '_blank');
+        }
+      });
+      container.appendChild(el);
+    }
+    
     async function cycleProcessing() {
       const tf = document.getElementById("timeframe").value;
+      // Legge la soglia impostata, di default 3.0%
+      const threshold = parseFloat(document.getElementById("threshold").value) || 3.0;
       
-      // Carica l’elenco dei simboli (filtrati per USDC/USDT)
+      // Resetta i risultati del ciclo precedente
+      document.getElementById("results").innerHTML = "";
+      
       if (allSymbols.length === 0) {
         const [bnSymbols, bySymbols] = await Promise.all([
           getBinanceSymbolListForSniper(),
@@ -392,19 +471,23 @@ ${exchangeIcon} Exchange: ${exchangeName}
       currentIndex = 0;
       cycleStartTime = new Date();
       updateStatus(`Inizio ciclo: 0/${allSymbols.length} elaborati.`);
-      await processBatch(tf);
+      await processBatch(tf, threshold);
     }
     
-    async function processBatch(tf) {
+    async function processBatch(tf, threshold) {
       const totalSymbols = allSymbols.length;
       const batch = allSymbols.slice(currentIndex, currentIndex + batchSize);
       
       for (let i = 0; i < batch.length; i++) {
         const coin = batch[i];
+        let result = null;
         if (coin.exchange === 'binance') {
-          await getBinanceMaxGain(coin.symbol, tf);
+          result = await getBinanceMaxGain(coin.symbol, tf, threshold);
         } else if (coin.exchange === 'bybit') {
-          await getBybitMaxGain(coin.symbol, tf);
+          result = await getBybitMaxGain(coin.symbol, tf, threshold);
+        }
+        if (result !== null) {
+          appendResult(result);
         }
         const processedCount = currentIndex + i + 1;
         const percentage = ((processedCount / totalSymbols) * 100).toFixed(1);
@@ -415,7 +498,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
       
       currentIndex += batchSize;
       if (currentIndex < totalSymbols) {
-        await processBatch(tf);
+        await processBatch(tf, threshold);
       } else {
         const totalElapsedSec = Math.floor((new Date() - cycleStartTime) / 1000);
         updateStatus(`Ciclo completato in ${totalElapsedSec} secondi. Riavvio ciclo...`);
@@ -424,7 +507,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
       }
     }
     
-    // Permette di avviare o riavviare manualmente il ciclo (avviene con il click su "▶ Avvia Analisi")
+    // Permette di avviare o riavviare manualmente il ciclo (da "▶ Avvia Analisi")
     function restartCycle() {
       allSymbols = [];
       currentIndex = 0;
@@ -438,7 +521,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
       }
     });
     
-    // NOTA: Al caricamento della pagina il ciclo non parte, ma solo quando si clicca "▶ Avvia Analisi".
+    // NOTA: il processo di analisi parte solo quando clicchi "▶ Avvia Analisi".
   </script>
 </body>
 </html>
