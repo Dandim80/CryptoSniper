@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
@@ -125,13 +125,13 @@
     </select>
     <label for="threshold">Soglia Gain (%):</label>
     <input type="number" id="threshold" value="3.0" step="0.1" min="0" />
-    <!-- Il processo parte solo al click -->
+    <!-- Avvio manuale -->
     <button onclick="restartCycle()">▶ Avvia Analisi</button>
     <button onclick="requestWakeLock()">🔒 Mantieni Attivo</button>
     <button onclick="clearSpamFilter()">🗑️ Reset Filtro Spam</button>
   </div>
   
-  <!-- Qui verranno visualizzate le coppie che superano la soglia -->
+  <!-- Risultati in tempo reale -->
   <div id="results"></div>
 
   <script>
@@ -145,25 +145,24 @@
     let isRunning = false;
     
     // Per il ciclo di elaborazione in batch
-    let allSymbols = [];   // Array di oggetti { exchange: "binance" o "bybit", symbol: "XYZ" }
-    let currentIndex = 0;  // Indice del simbolo corrente
-    const batchSize = 150; // Elaborazione per batch di 150 coin
+    let allSymbols = [];   // Array: { exchange: "binance" o "bybit", symbol: "XYZ" }
+    let currentIndex = 0;  // Indice corrente nel ciclo
+    const batchSize = 150; // 150 coin per batch
     let cycleStartTime = null; // Tempo di inizio ciclo
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     // FUNZIONI DI SUPPORTO
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    
     function isMobile() {
       return /Mobi|Android|iPhone/i.test(navigator.userAgent);
     }
     
-    // Registrazione del Service Worker per eventuali funzionalità PWA
+    // Registrazione del Service Worker (per funzionalità PWA)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('data:application/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBpbnN0YWxsZWQnKTsKfSk7CgpzZWxmLmFkZEV2ZW50TGlzdGVuZXIoJ2FjdGl2YXRlJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBhY3RpdmF0ZWQnKTsKfSk7');
     }
     
-    // Sistema anti-spam: tiene traccia degli alert inviati nelle ultime 4 ore
+    // Sistema anti-spam (4 ore di validità per alert)
     let sentAlerts = new Map();
     function canSendAlert(symbol) {
       const now = Date.now();
@@ -181,52 +180,45 @@
       setTimeout(() => updateStatus('✅ Sistema pronto'), 2000);
     }
     
-    // Aggiorna lo status con procentuale e tempo trascorso
+    // Aggiorna lo status (percentuale e tempo trascorso)
     function updateStatus(message) {
       const statusEl = document.getElementById('status');
       statusEl.textContent = message;
       statusEl.className = isRunning ? 'status active' : 'status';
     }
     
-    // Funzioni per Wake Lock e Audio Keep Alive
-    async function requestWakeLock() {
-      try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen');
-          updateStatus('🔒 Wake Lock attivo - schermo mantenuto acceso');
-        } else {
-          startKeepAliveTimer();
-          updateStatus('🔄 Keep-alive attivato (compatibilità)');
+    // ––––––––––––––––––––––––––––––––––––––––––––––––
+    // DEEP LINKING PER MOBILE: UTILIZZO DEGLI "INTENT" (solo per Android)
+    // ––––––––––––––––––––––––––––––––––––––––––––––––
+    function createTradingViewUrl(symbol, interval, exchange = 'BINANCE') {
+      const tvInterval = getTradingViewInterval(interval);
+      if (isMobile()) {
+        // Prova ad aprire l'app TradingView su Android utilizzando l’intent deep link.
+        return `intent://chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark#Intent;scheme=tradingview;package=com.tradingview.tradingview;end`;
+      }
+      return `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`;
+    }
+    
+    function createExchangeUrl(symbol, exchange) {
+      if (exchange.toLowerCase() === 'binance') {
+        const baseAsset = symbol.replace("USDC", "");
+        if (isMobile()) {
+          // Deep link via intent per l'app Binance (assumendo package "com.binance.android")
+          return `intent://trade?market=${baseAsset}_USDC#Intent;scheme=binance;package=com.binance.android;end`;
         }
-      } catch (err) {
-        console.error('Errore wake lock:', err);
-        startKeepAliveTimer();
-        updateStatus('🔄 Keep-alive attivato (fallback)');
+        return `https://www.binance.com/en/trade/${baseAsset}_USDC`;
+      } else if (exchange.toLowerCase() === 'bybit') {
+        if (isMobile()) {
+          // Deep link via intent per l'app Bybit (assumendo package "com.bybit")
+          return `intent://trade/spot?symbol=${symbol}#Intent;scheme=bybit;package=com.bybit;end`;
+        }
+        return `https://www.bybit.com/en/trade/spot/${symbol}`;
       }
-    }
-    function startKeepAliveTimer() {
-      setInterval(() => console.log('Keep-alive tick:', new Date().toLocaleTimeString()), 30000);
-    }
-    function initAudioKeepAlive() {
-      try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-        oscillator.frequency.setValueAtTime(20000, audioContext.currentTime);
-        oscillator.start();
-        console.log('Audio keep-alive inizializzato');
-        return true;
-      } catch (err) {
-        console.error('Audio keep-alive fallito:', err);
-        return false;
-      }
+      return '#';
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // URL DI TRADINGVIEW ED EXCHANGE
+    // URL DI TRADINGVIEW (mappa gli intervalli)
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     function getTradingViewInterval(interval) {
       const intervalMap = {
@@ -241,25 +233,6 @@
         '1M': '1M'
       };
       return intervalMap[interval] || '5';
-    }
-    function createTradingViewUrl(symbol, interval, exchange = 'BINANCE') {
-      const tvInterval = getTradingViewInterval(interval);
-      return `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`;
-    }
-    function createExchangeUrl(symbol, exchange) {
-      if (exchange.toLowerCase() === 'binance') {
-        const baseAsset = symbol.replace("USDC", "");
-        if(isMobile()){
-          return `binance://trade?market=${baseAsset}_USDC`;
-        }
-        return `https://www.binance.com/en/trade/${baseAsset}_USDC`;
-      } else if (exchange.toLowerCase() === 'bybit') {
-        if(isMobile()){
-          return `bybit://trade/spot?symbol=${symbol}`;
-        }
-        return `https://www.bybit.com/en/trade/spot/${symbol}`;
-      }
-      return '#';
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
@@ -389,7 +362,9 @@ ${exchangeIcon} Exchange: ${exchangeName}
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // RECUPERO DEL MERCATO SPOT FILTRATO – SOLO Coppie USDC per Binance e USDT per Bybit
+    // RECUPERO DEL MERCATO SPOT FILTRATO:
+    // SOLO coppie che terminano con "USDC" per Binance
+    // e "USDT" per Bybit.
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     async function getBinanceSymbolListForSniper() {
       try {
@@ -423,7 +398,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     // CICLO DI ELABORAZIONE A BATCH CON RISULTATI IN TEMPO REALE
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // Appende una coppia approvata nella sezione "results"
+    // Appende ogni risultato ottenuto nella sezione "results"
     function appendResult(candle) {
       const container = document.getElementById("results");
       const el = document.createElement("div");
@@ -452,10 +427,10 @@ ${exchangeIcon} Exchange: ${exchangeName}
     
     async function cycleProcessing() {
       const tf = document.getElementById("timeframe").value;
-      // Legge la soglia impostata, di default 3.0%
+      // Legge la soglia impostata (default 3.0 %)
       const threshold = parseFloat(document.getElementById("threshold").value) || 3.0;
       
-      // Resetta i risultati del ciclo precedente
+      // Resetta i risultati precedenti
       document.getElementById("results").innerHTML = "";
       
       if (allSymbols.length === 0) {
@@ -507,7 +482,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
       }
     }
     
-    // Permette di avviare o riavviare manualmente il ciclo (da "▶ Avvia Analisi")
+    // Avvia manualmente il ciclo (tramite il pulsante "▶ Avvia Analisi")
     function restartCycle() {
       allSymbols = [];
       currentIndex = 0;
@@ -521,7 +496,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
       }
     });
     
-    // NOTA: il processo di analisi parte solo quando clicchi "▶ Avvia Analisi".
+    // NOTA: Il processo di analisi parte solo al click su "▶ Avvia Analisi"
   </script>
 </body>
 </html>
