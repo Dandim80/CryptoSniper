@@ -31,10 +31,7 @@
       border: 1px solid #555;
       border-radius: 4px;
     }
-    button {
-      cursor: pointer;
-      transition: background 0.3s;
-    }
+    button { cursor: pointer; transition: background 0.3s; }
     button:hover { background: #444; }
     .status {
       background: #333;
@@ -106,11 +103,9 @@
 </head>
 <body>
   <h1>📈 Crypto Sniper Enhanced</h1>
-  
   <div class="status" id="status">
     ⏸ In attesa di avvio...
   </div>
-  
   <div class="controls">
     <label for="timeframe">Timeframe:</label>
     <select id="timeframe">
@@ -133,7 +128,7 @@
   
   <!-- Risultati in tempo reale -->
   <div id="results"></div>
-
+  
   <script>
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     // COSTANTI E VARIABILI GLOBALI
@@ -221,54 +216,64 @@
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // DEEP LINKING: Creazione degli URL per TradingView ed Exchange  
-    // Useremo "intent://" con S.browser_fallback_url per il fallback.
+    // FUNZIONI PER GENERARE LINK: Deep link e fallback
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    function getTradingViewInterval(interval) {
-      const intervalMap = {
-        '1m': '1',
-        '5m': '5',
-        '15m': '15',
-        '30m': '30',
-        '1h': '60',
-        '4h': '240',
-        '1d': '1D',
-        '1w': '1W',
-        '1M': '1M'
-      };
-      return intervalMap[interval] || '5';
-    }
-    
-    function createTradingViewUrl(symbol, interval, exchange = 'BINANCE') {
+    function getTradingViewLink(symbol, interval, exchange="BINANCE") {
       const tvInterval = getTradingViewInterval(interval);
       if (isMobile()) {
-        // Costruisce il fallback URL (encodato) per TradingView
-        let fallbackUrl = encodeURIComponent(`https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`);
-        return `intent://chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark#Intent;scheme=tradingview;package=com.tradingview.tradingview;S.browser_fallback_url=${fallbackUrl};end`;
+        // Prova a lanciare la app TradingView con il custom URL scheme
+        return {
+          deepLink: `tradingview://chart?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`,
+          fallback: `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`
+        };
       }
-      return `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`;
+      return { deepLink: null, fallback: `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark` };
     }
     
-    function createExchangeUrl(symbol, exchange) {
+    function getExchangeLink(symbol, exchange) {
       if (exchange.toLowerCase() === 'binance') {
         const baseAsset = symbol.replace("USDC", "");
         if (isMobile()) {
-          let fallbackUrl = encodeURIComponent(`https://www.binance.com/en/trade/${baseAsset}_USDC`);
-          return `intent://trade?market=${baseAsset}_USDC#Intent;scheme=binance;package=com.binance.android;S.browser_fallback_url=${fallbackUrl};end`;
+          return {
+            deepLink: `binance://trade?market=${baseAsset}_USDC`,
+            fallback: `https://www.binance.com/en/trade/${baseAsset}_USDC`
+          };
         }
-        return `https://www.binance.com/en/trade/${baseAsset}_USDC`;
+        return { deepLink: null, fallback: `https://www.binance.com/en/trade/${baseAsset}_USDC` };
       } else if (exchange.toLowerCase() === 'bybit') {
         if (isMobile()) {
-          let fallbackUrl = encodeURIComponent(`https://www.bybit.com/en/trade/spot/${symbol}`);
-          return `intent://trade/spot?symbol=${symbol}#Intent;scheme=bybit;package=com.bybit;S.browser_fallback_url=${fallbackUrl};end`;
+          return {
+            deepLink: `bybit://trade/spot?symbol=${symbol}`,
+            fallback: `https://www.bybit.com/en/trade/spot/${symbol}`
+          };
         }
-        return `https://www.bybit.com/en/trade/spot/${symbol}`;
+        return { deepLink: null, fallback: `https://www.bybit.com/en/trade/spot/${symbol}` };
       }
-      return '#';
+      return { deepLink: null, fallback: "#" };
+    }
+    
+    // Funzione che tenta di lanciare il deep link tramite un iframe.
+    // Se la app è installata, l'iframe tenterà di aprirla.
+    function launchApp(deepLink, fallback) {
+      if (!deepLink) {
+        // Non c'è deepLink (es. su desktop): apri il fallback
+        window.open(fallback, "_blank");
+        return;
+      }
+      // Crea un iframe invisibile
+      var iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = deepLink;
+      document.body.appendChild(iframe);
+      // Dopo 1500 ms rimuove l'iframe e, se nessuna app è stata aperta, apri il fallback
+      setTimeout(function() {
+        document.body.removeChild(iframe);
+        window.open(fallback, "_blank");
+      }, 1500);
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // ANALISI DELLE CANDELE
+    // FUNZIONI DI ANALISI DELLE CANDELE
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     async function getBinanceMaxGain(symbol, tf, threshold) {
       try {
@@ -290,9 +295,7 @@
               open,
               close,
               index: i,
-              timestamp: new Date(data[i][0]).toLocaleTimeString(),
-              tradingViewUrl: createTradingViewUrl(symbol, tf, 'BINANCE'),
-              exchangeUrl: createExchangeUrl(symbol, 'binance')
+              timestamp: new Date(data[i][0]).toLocaleTimeString()
             };
           }
         }
@@ -305,6 +308,13 @@
           } catch (tickErr) {
             bestCandle.dailyChange = "N/A";
           }
+          // Aggiunge i link
+          let tvLink = getTradingViewLink(symbol, tf, 'BINANCE');
+          let exLink = getExchangeLink(symbol, 'binance');
+          bestCandle.tradingViewUrl = tvLink.fallback;
+          bestCandle.exchangeUrl = exLink.fallback;
+          bestCandle._tvDeep = tvLink.deepLink;
+          bestCandle._exDeep = exLink.deepLink;
           if (canSendAlert(symbol)) {
             sendTelegramAlert(bestCandle, tf);
           }
@@ -339,9 +349,7 @@
               open,
               close,
               index: i,
-              timestamp: new Date(parseInt(klines[i][0])).toLocaleTimeString(),
-              tradingViewUrl: createTradingViewUrl(symbol, tf, 'BYBIT'),
-              exchangeUrl: createExchangeUrl(symbol, 'bybit')
+              timestamp: new Date(parseInt(klines[i][0])).toLocaleTimeString()
             };
           }
         }
@@ -357,6 +365,12 @@
           } catch (tickErr) {
             bestCandle.dailyChange = "N/A";
           }
+          let tvLink = getTradingViewLink(symbol, tf, 'BYBIT');
+          let exLink = getExchangeLink(symbol, 'bybit');
+          bestCandle.tradingViewUrl = tvLink.fallback;
+          bestCandle.exchangeUrl = exLink.fallback;
+          bestCandle._tvDeep = tvLink.deepLink;
+          bestCandle._exDeep = exLink.deepLink;
           if (canSendAlert(`BYBIT_${symbol}`)) {
             sendTelegramAlert(bestCandle, tf);
           }
@@ -373,6 +387,7 @@
       const exchangeIcon = data.exchange === 'bybit' ? '🟠' : '🟡';
       const exchangeName = data.exchange === 'bybit' ? 'BYBIT' : 'BINANCE';
       const quoteCurrency = data.exchange === 'bybit' ? 'USDT' : 'USDC';
+      // Nell'alert usiamo i fallback (che sono URL https)
       const message = `🚨 CRYPTO SNIPER ALERT 🚨
       
 ${exchangeIcon} Exchange: ${exchangeName}
@@ -409,7 +424,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     // RECUPERO DEL MERCATO SPOT FILTRATO:
-    // SOLO coppie che terminano con "USDC" per Binance
+    // Solo coppie che terminano con "USDC" per Binance
     // e "USDT" per Bybit.
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     async function getBinanceSymbolListForSniper() {
@@ -448,6 +463,9 @@ ${exchangeIcon} Exchange: ${exchangeName}
       const container = document.getElementById("results");
       const el = document.createElement("div");
       el.className = `coin ${candle.exchange}`;
+      // Ottieni i link deep e fallback
+      const tv = getTradingViewLink(candle.symbol, "1d", candle.exchange.toUpperCase());
+      const ex = getExchangeLink(candle.symbol, candle.exchange);
       el.innerHTML = `
         <div class="exchange-badge ${candle.exchange}">${candle.exchange.toUpperCase()}</div>
         <div><strong>💰 ${candle.symbol}</strong> ${candle.exchange === 'bybit' ? '(USDT)' : '(USDC)'}</div>
@@ -455,14 +473,16 @@ ${exchangeIcon} Exchange: ${exchangeName}
         <div>🕒 Candela n° ${candle.index + 1} | ⏰ ${candle.timestamp}</div>
         <div>🟢 Open: ${candle.open} | 🔴 Close: ${candle.close}</div>
         <div style="margin-top: 10px;">
-          <a href="${createTradingViewUrl(candle.symbol, '1d', candle.exchange.toUpperCase())}" target="_blank" class="tradingview-link">📊 TradingView</a>
-          <a href="${candle.exchangeUrl}" target="_blank" class="exchange-link ${candle.exchange}">🔗 ${candle.exchange.toUpperCase()} Trading</a>
+          <a href="#" class="tradingview-link" onclick="launchApp('${candle._tvDeep || ''}', '${candle.tradingViewUrl}'); return false;">📊 TradingView</a>
+          <a href="#" class="exchange-link ${candle.exchange}" onclick="launchApp('${candle._exDeep || ''}', '${candle.exchangeUrl}'); return false;">🔗 ${candle.exchange.toUpperCase()} Trading</a>
         </div>
         <div class="screenshot-note"></div>
       `;
       el.addEventListener("click", (e) => {
         if (e.target.tagName !== 'A') {
-          window.open(createTradingViewUrl(candle.symbol, '1d', candle.exchange.toUpperCase()), '_blank');
+          // Apertura di TradingView, usando il medesimo metodo
+          const tv = getTradingViewLink(candle.symbol, "1d", candle.exchange.toUpperCase());
+          launchApp(tv.deepLink, tv.fallback);
         }
       });
       container.appendChild(el);
@@ -535,7 +555,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
       }
     });
     
-    // NOTA: Il processo parte solo al click su "▶ Avvia Analisi"
+    // NOTA: Il processo di analisi parte solo al click su "▶ Avvia Analisi".
   </script>
 </body>
 </html>
