@@ -145,8 +145,8 @@
     let isRunning = false;
     
     // Per il ciclo a batch
-    let allSymbols = [];   // Array di oggetti: { exchange: "binance" o "bybit", symbol: "XYZ" }
-    let currentIndex = 0;  // Indice corrente
+    let allSymbols = [];   // Array: { exchange: "binance" o "bybit", symbol: "XYZ" }
+    let currentIndex = 0;
     const batchSize = 150;
     let cycleStartTime = null;
     
@@ -222,7 +222,7 @@
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     // DEEP LINKING: Creazione degli URL per TradingView ed Exchange  
-    // “intent://” viene usato su Android
+    // Useremo "intent://" con S.browser_fallback_url per il fallback.
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     function getTradingViewInterval(interval) {
       const intervalMap = {
@@ -242,8 +242,9 @@
     function createTradingViewUrl(symbol, interval, exchange = 'BINANCE') {
       const tvInterval = getTradingViewInterval(interval);
       if (isMobile()) {
-        // Per Android usiamo intent deep link per TradingView
-        return `intent://chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark#Intent;scheme=tradingview;package=com.tradingview.tradingview;end`;
+        // Costruisce il fallback URL (encodato) per TradingView
+        let fallbackUrl = encodeURIComponent(`https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`);
+        return `intent://chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark#Intent;scheme=tradingview;package=com.tradingview.tradingview;S.browser_fallback_url=${fallbackUrl};end`;
       }
       return `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`;
     }
@@ -252,12 +253,14 @@
       if (exchange.toLowerCase() === 'binance') {
         const baseAsset = symbol.replace("USDC", "");
         if (isMobile()) {
-          return `intent://trade?market=${baseAsset}_USDC#Intent;scheme=binance;package=com.binance.android;end`;
+          let fallbackUrl = encodeURIComponent(`https://www.binance.com/en/trade/${baseAsset}_USDC`);
+          return `intent://trade?market=${baseAsset}_USDC#Intent;scheme=binance;package=com.binance.android;S.browser_fallback_url=${fallbackUrl};end`;
         }
         return `https://www.binance.com/en/trade/${baseAsset}_USDC`;
       } else if (exchange.toLowerCase() === 'bybit') {
         if (isMobile()) {
-          return `intent://trade/spot?symbol=${symbol}#Intent;scheme=bybit;package=com.bybit;end`;
+          let fallbackUrl = encodeURIComponent(`https://www.bybit.com/en/trade/spot/${symbol}`);
+          return `intent://trade/spot?symbol=${symbol}#Intent;scheme=bybit;package=com.bybit;S.browser_fallback_url=${fallbackUrl};end`;
         }
         return `https://www.bybit.com/en/trade/spot/${symbol}`;
       }
@@ -294,7 +297,7 @@
           }
         }
         if (maxGain >= threshold) {
-          // Ottieni la variazione giornaliera dal ticker 24hr
+          // Ottieni variazione giornaliera (ticker 24hr)
           try {
             const infoRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
             const info = await infoRes.json();
@@ -306,9 +309,8 @@
             sendTelegramAlert(bestCandle, tf);
           }
           return bestCandle;
-        } else {
-          return null;
         }
+        return null;
       } catch (e) {
         console.error('Errore Binance per', symbol, ':', e);
         return null;
@@ -320,9 +322,7 @@
         const bybitInterval = getTradingViewInterval(tf).toLowerCase();
         const res = await fetch(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${symbol}&interval=${bybitInterval}&limit=6`);
         const data = await res.json();
-        if (data.retCode !== 0 || !data.result || !data.result.list || data.result.list.length < 6) {
-          return null;
-        }
+        if (data.retCode !== 0 || !data.result || !data.result.list || data.result.list.length < 6) return null;
         let maxGain = -Infinity;
         let bestCandle = null;
         const klines = data.result.list.reverse();
@@ -346,12 +346,10 @@
           }
         }
         if (maxGain >= threshold) {
-          // Ottieni il valore giornaliero dal ticker Bybit
           try {
             const infoRes = await fetch(`https://api.bybit.com/v5/market/ticker?category=spot&symbol=${symbol}`);
             const info = await infoRes.json();
             if (info.retCode === 0 && info.result && info.result.list && info.result.list.length > 0) {
-              // Bybit restituisce price24hPcnt come numero decimale (es. 0.0327)
               bestCandle.dailyChange = (parseFloat(info.result.list[0].price24hPcnt) * 100).toFixed(2);
             } else {
               bestCandle.dailyChange = "N/A";
@@ -363,9 +361,8 @@
             sendTelegramAlert(bestCandle, tf);
           }
           return bestCandle;
-        } else {
-          return null;
         }
+        return null;
       } catch (e) {
         console.error('Errore Bybit per', symbol, ':', e);
         return null;
@@ -411,7 +408,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // RECUPERO DEL MERCATO SPOT FILTRATO
+    // RECUPERO DEL MERCATO SPOT FILTRATO:
     // SOLO coppie che terminano con "USDC" per Binance
     // e "USDT" per Bybit.
     // ––––––––––––––––––––––––––––––––––––––––––––––––
@@ -461,9 +458,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
           <a href="${createTradingViewUrl(candle.symbol, '1d', candle.exchange.toUpperCase())}" target="_blank" class="tradingview-link">📊 TradingView</a>
           <a href="${candle.exchangeUrl}" target="_blank" class="exchange-link ${candle.exchange}">🔗 ${candle.exchange.toUpperCase()} Trading</a>
         </div>
-        <div class="screenshot-note">
-          💡
-        </div>
+        <div class="screenshot-note"></div>
       `;
       el.addEventListener("click", (e) => {
         if (e.target.tagName !== 'A') {
