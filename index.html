@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
@@ -144,11 +144,11 @@
     let wakeLock = null;
     let isRunning = false;
     
-    // Per il ciclo di elaborazione in batch
-    let allSymbols = [];   // Array: { exchange: "binance" o "bybit", symbol: "XYZ" }
-    let currentIndex = 0;  // Indice corrente nel ciclo
-    const batchSize = 150; // 150 coin per batch
-    let cycleStartTime = null; // Tempo di inizio ciclo
+    // Per il ciclo a batch
+    let allSymbols = [];   // Array di oggetti: { exchange: "binance" o "bybit", symbol: "XYZ" }
+    let currentIndex = 0;  // Indice corrente
+    const batchSize = 150;
+    let cycleStartTime = null;
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     // FUNZIONI DI SUPPORTO
@@ -157,12 +157,10 @@
       return /Mobi|Android|iPhone/i.test(navigator.userAgent);
     }
     
-    // Registrazione del Service Worker (per funzionalità PWA)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('data:application/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBpbnN0YWxsZWQnKTsKfSk7CgpzZWxmLmFkZEV2ZW50TGlzdGVuZXIoJ2FjdGl2YXRlJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBhY3RpdmF0ZWQnKTsKfSk7');
     }
     
-    // Sistema anti-spam (4 ore di validità per alert)
     let sentAlerts = new Map();
     function canSendAlert(symbol) {
       const now = Date.now();
@@ -180,45 +178,51 @@
       setTimeout(() => updateStatus('✅ Sistema pronto'), 2000);
     }
     
-    // Aggiorna lo status (percentuale e tempo trascorso)
     function updateStatus(message) {
       const statusEl = document.getElementById('status');
       statusEl.textContent = message;
       statusEl.className = isRunning ? 'status active' : 'status';
     }
     
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // DEEP LINKING PER MOBILE: UTILIZZO DEGLI "INTENT" (solo per Android)
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
-    function createTradingViewUrl(symbol, interval, exchange = 'BINANCE') {
-      const tvInterval = getTradingViewInterval(interval);
-      if (isMobile()) {
-        // Prova ad aprire l'app TradingView su Android utilizzando l’intent deep link.
-        return `intent://chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark#Intent;scheme=tradingview;package=com.tradingview.tradingview;end`;
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          updateStatus('🔒 Wake Lock attivo - schermo mantenuto acceso');
+        } else {
+          startKeepAliveTimer();
+          updateStatus('🔄 Keep-alive attivato (compatibilità)');
+        }
+      } catch (err) {
+        console.error('Errore wake lock:', err);
+        startKeepAliveTimer();
+        updateStatus('🔄 Keep-alive attivato (fallback)');
       }
-      return `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`;
+    }
+    function startKeepAliveTimer() {
+      setInterval(() => console.log('Keep-alive tick:', new Date().toLocaleTimeString()), 30000);
+    }
+    function initAudioKeepAlive() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(20000, audioContext.currentTime);
+        oscillator.start();
+        console.log('Audio keep-alive inizializzato');
+        return true;
+      } catch (err) {
+        console.error('Audio keep-alive fallito:', err);
+        return false;
+      }
     }
     
-    function createExchangeUrl(symbol, exchange) {
-      if (exchange.toLowerCase() === 'binance') {
-        const baseAsset = symbol.replace("USDC", "");
-        if (isMobile()) {
-          // Deep link via intent per l'app Binance (assumendo package "com.binance.android")
-          return `intent://trade?market=${baseAsset}_USDC#Intent;scheme=binance;package=com.binance.android;end`;
-        }
-        return `https://www.binance.com/en/trade/${baseAsset}_USDC`;
-      } else if (exchange.toLowerCase() === 'bybit') {
-        if (isMobile()) {
-          // Deep link via intent per l'app Bybit (assumendo package "com.bybit")
-          return `intent://trade/spot?symbol=${symbol}#Intent;scheme=bybit;package=com.bybit;end`;
-        }
-        return `https://www.bybit.com/en/trade/spot/${symbol}`;
-      }
-      return '#';
-    }
-    
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // URL DI TRADINGVIEW (mappa gli intervalli)
+    // DEEP LINKING: Creazione degli URL per TradingView ed Exchange  
+    // “intent://” viene usato su Android
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     function getTradingViewInterval(interval) {
       const intervalMap = {
@@ -235,8 +239,33 @@
       return intervalMap[interval] || '5';
     }
     
+    function createTradingViewUrl(symbol, interval, exchange = 'BINANCE') {
+      const tvInterval = getTradingViewInterval(interval);
+      if (isMobile()) {
+        // Per Android usiamo intent deep link per TradingView
+        return `intent://chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark#Intent;scheme=tradingview;package=com.tradingview.tradingview;end`;
+      }
+      return `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`;
+    }
+    
+    function createExchangeUrl(symbol, exchange) {
+      if (exchange.toLowerCase() === 'binance') {
+        const baseAsset = symbol.replace("USDC", "");
+        if (isMobile()) {
+          return `intent://trade?market=${baseAsset}_USDC#Intent;scheme=binance;package=com.binance.android;end`;
+        }
+        return `https://www.binance.com/en/trade/${baseAsset}_USDC`;
+      } else if (exchange.toLowerCase() === 'bybit') {
+        if (isMobile()) {
+          return `intent://trade/spot?symbol=${symbol}#Intent;scheme=bybit;package=com.bybit;end`;
+        }
+        return `https://www.bybit.com/en/trade/spot/${symbol}`;
+      }
+      return '#';
+    }
+    
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // ANALISI DELLE CANDELE (BINANCE E BYBIT)
+    // ANALISI DELLE CANDELE
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     async function getBinanceMaxGain(symbol, tf, threshold) {
       try {
@@ -265,6 +294,14 @@
           }
         }
         if (maxGain >= threshold) {
+          // Ottieni la variazione giornaliera dal ticker 24hr
+          try {
+            const infoRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+            const info = await infoRes.json();
+            bestCandle.dailyChange = parseFloat(info.priceChangePercent).toFixed(2);
+          } catch (tickErr) {
+            bestCandle.dailyChange = "N/A";
+          }
           if (canSendAlert(symbol)) {
             sendTelegramAlert(bestCandle, tf);
           }
@@ -309,6 +346,19 @@
           }
         }
         if (maxGain >= threshold) {
+          // Ottieni il valore giornaliero dal ticker Bybit
+          try {
+            const infoRes = await fetch(`https://api.bybit.com/v5/market/ticker?category=spot&symbol=${symbol}`);
+            const info = await infoRes.json();
+            if (info.retCode === 0 && info.result && info.result.list && info.result.list.length > 0) {
+              // Bybit restituisce price24hPcnt come numero decimale (es. 0.0327)
+              bestCandle.dailyChange = (parseFloat(info.result.list[0].price24hPcnt) * 100).toFixed(2);
+            } else {
+              bestCandle.dailyChange = "N/A";
+            }
+          } catch (tickErr) {
+            bestCandle.dailyChange = "N/A";
+          }
           if (canSendAlert(`BYBIT_${symbol}`)) {
             sendTelegramAlert(bestCandle, tf);
           }
@@ -333,15 +383,14 @@ ${exchangeIcon} Exchange: ${exchangeName}
 💰 Quote: ${quoteCurrency}
 🔸 Timeframe: ${tf}
 🔸 Gain: ${data.gain}%
+📆 24h: ${data.dailyChange}%
 🕒 Candela n° ${data.index + 1}
 🟢 Open: ${data.open}
 🔴 Close: ${data.close}
 ⏰ Timestamp: ${data.timestamp}
 
 📊 TradingView: ${data.tradingViewUrl}
-🔗 ${exchangeName} Trading: ${data.exchangeUrl}
-
-💡 Suggerimento: TradingView si apre in modalità completa per analisi avanzata.`;
+🔗 ${exchangeName} Trading: ${data.exchangeUrl}`;
       
       const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
       try {
@@ -362,7 +411,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // RECUPERO DEL MERCATO SPOT FILTRATO:
+    // RECUPERO DEL MERCATO SPOT FILTRATO
     // SOLO coppie che terminano con "USDC" per Binance
     // e "USDT" per Bybit.
     // ––––––––––––––––––––––––––––––––––––––––––––––––
@@ -398,7 +447,6 @@ ${exchangeIcon} Exchange: ${exchangeName}
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     // CICLO DI ELABORAZIONE A BATCH CON RISULTATI IN TEMPO REALE
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // Appende ogni risultato ottenuto nella sezione "results"
     function appendResult(candle) {
       const container = document.getElementById("results");
       const el = document.createElement("div");
@@ -406,7 +454,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
       el.innerHTML = `
         <div class="exchange-badge ${candle.exchange}">${candle.exchange.toUpperCase()}</div>
         <div><strong>💰 ${candle.symbol}</strong> ${candle.exchange === 'bybit' ? '(USDT)' : '(USDC)'}</div>
-        <div>📊 Gain: <span class="gain">+${candle.gain}%</span></div>
+        <div>📊 Gain: <span class="gain">+${candle.gain}%</span> | 📆 24h: ${candle.dailyChange}%</div>
         <div>🕒 Candela n° ${candle.index + 1} | ⏰ ${candle.timestamp}</div>
         <div>🟢 Open: ${candle.open} | 🔴 Close: ${candle.close}</div>
         <div style="margin-top: 10px;">
@@ -414,7 +462,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
           <a href="${candle.exchangeUrl}" target="_blank" class="exchange-link ${candle.exchange}">🔗 ${candle.exchange.toUpperCase()} Trading</a>
         </div>
         <div class="screenshot-note">
-          💡 TradingView si apre in modalità completa per analisi avanzata.
+          💡
         </div>
       `;
       el.addEventListener("click", (e) => {
@@ -427,10 +475,8 @@ ${exchangeIcon} Exchange: ${exchangeName}
     
     async function cycleProcessing() {
       const tf = document.getElementById("timeframe").value;
-      // Legge la soglia impostata (default 3.0 %)
       const threshold = parseFloat(document.getElementById("threshold").value) || 3.0;
       
-      // Resetta i risultati precedenti
       document.getElementById("results").innerHTML = "";
       
       if (allSymbols.length === 0) {
@@ -482,21 +528,19 @@ ${exchangeIcon} Exchange: ${exchangeName}
       }
     }
     
-    // Avvia manualmente il ciclo (tramite il pulsante "▶ Avvia Analisi")
     function restartCycle() {
       allSymbols = [];
       currentIndex = 0;
       cycleProcessing();
     }
     
-    // Gestione della visibilità per il Wake Lock
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && wakeLock === null) {
         requestWakeLock();
       }
     });
     
-    // NOTA: Il processo di analisi parte solo al click su "▶ Avvia Analisi"
+    // NOTA: Il processo parte solo al click su "▶ Avvia Analisi"
   </script>
 </body>
 </html>
