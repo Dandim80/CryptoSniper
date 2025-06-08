@@ -3,85 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crypto Sniper Enhanced</title>
+  <title>Crypto Sniper Enhanced - Debug</title>
   <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ3J5cHRvIFNuaXBlciIsInNob3J0X25hbWUiOiJDcnlwdG9TbmlwZXIiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTExMTEiLCJ0aGVtZV9jb2xvciI6IiMyMjIyMjIiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTVRJNElpQm9aV2xuYUhROUlqRXlPQ0lpSUhacFpYZENiM2c5SWpBZ01DQXhNamdnTVRJNElpQm1hV3hzUFNJak16TXpJaUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lQZ284Y21WamRDQjNhV1IwYUQwaU1USTRMQ0FnSUdObGRtbDBhRDBpTVMwd0lHRmpiaTB6SWlCbWFXeHNQU0lqTWpJeUlpOCtQSFJsZUhRZ2VEMGlOalFpSUhrOUlqWTBJaUJtYVd4c1BTSWpSa1pHSWlCbWIyNTBMWE5wZW1VOUlqSTBJaUJtYjI1MExXWmhiV2xzZVQwaWJXOXViM053WVdObElpQjBaWGgwTFdGdVkyaHZjajBpYldsa1pHeGxJajQ4TDJSbFpuTStQQzl6ZG1jKyIsInNpemVzIjoiMTI4eDEyOCIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
   <meta name="theme-color" content="#222222">
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      background: #111; 
-      color: #eee; 
-      padding: 10px; 
-      margin: 0;
-    }
+    body { font-family: Arial, sans-serif; background: #111; color: #eee; padding: 10px; margin: 0; }
     h1, h2, h3 { text-align: center; }
     .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-      align-items: center;
-      justify-content: center;
+      display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;
+      align-items: center; justify-content: center;
     }
-    select, input[type="number"], button { 
-      margin: 5px;
-      padding: 8px 12px;
-      background: #333;
-      color: #eee;
-      border: 1px solid #555;
-      border-radius: 4px;
+    select, input[type="number"], button {
+      margin: 5px; padding: 8px 12px; background: #333; color: #eee;
+      border: 1px solid #555; border-radius: 4px;
     }
     button { cursor: pointer; transition: background 0.3s; }
     button:hover { background: #444; }
     .status {
-      background: #333;
-      padding: 10px;
-      border-radius: 4px;
-      margin-bottom: 15px;
-      text-align: center;
+      background: #333; padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: center;
     }
-    .status.active {
-      background: linear-gradient(90deg, #00ff88, #00cc66);
-      color: #000;
-    }
-    /* L'area dei risultati contiene i record delle coppie approvate */
+    .status.active { background: linear-gradient(90deg, #00ff88, #00cc66); color: #000; }
     #results {
-      padding: 10px;
-      margin-top: 20px;
-      background: #222;
-      border-radius: 6px;
+      padding: 10px; margin-top: 20px; background: #222; border-radius: 6px;
     }
     .coin {
-      padding: 15px;
-      margin-bottom: 10px;
-      background: linear-gradient(135deg, #222, #333);
-      border-radius: 8px;
-      cursor: pointer;
-      border-left: 4px solid #00ff88;
-      transition: transform 0.2s;
+      padding: 15px; margin-bottom: 10px; background: linear-gradient(135deg, #222, #333);
+      border-radius: 8px; cursor: pointer; border-left: 4px solid #00ff88; transition: transform 0.2s;
     }
     .coin.bybit { border-left-color: #f7931a; }
     .coin.binance { border-left-color: #f3ba2f; }
     .coin:hover { transform: translateX(5px); }
     .gain { color: #00ff88; font-weight: bold; font-size: 1.2em; }
     .exchange-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: bold;
+      display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;
       margin-bottom: 8px;
     }
     .exchange-badge.bybit { background: #f7931a; color: #000; }
     .exchange-badge.binance { background: #f3ba2f; color: #000; }
     .tradingview-link, .exchange-link {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 4px;
-      text-decoration: none;
-      font-size: 12px;
-      margin: 4px 8px 4px 0;
-      transition: background 0.3s;
+      display: inline-block; padding: 6px 12px; border-radius: 4px; text-decoration: none;
+      font-size: 12px; margin: 4px 8px 4px 0; transition: background 0.3s;
     }
     .tradingview-link { background: #1e88e5; color: white; }
     .tradingview-link:hover { background: #1976d2; }
@@ -91,21 +52,12 @@
     .exchange-link.binance:hover { background: #d4a027; }
     .exchange-link.bybit { background: #f7931a; color: #000; }
     .exchange-link.bybit:hover { background: #d97e15; }
-    .screenshot-note {
-      background: #444;
-      padding: 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      margin-top: 8px;
-      color: #aaa;
-    }
+    .screenshot-note { background: #444; padding: 8px; border-radius: 4px; font-size: 12px; margin-top: 8px; color: #aaa; }
   </style>
 </head>
 <body>
-  <h1>📈 Crypto Sniper Enhanced</h1>
-  <div class="status" id="status">
-    ⏸ In attesa di avvio...
-  </div>
+  <h1>📈 Crypto Sniper Enhanced - Debug</h1>
+  <div class="status" id="status">⏸ In attesa di avvio...</div>
   <div class="controls">
     <label for="timeframe">Timeframe:</label>
     <select id="timeframe">
@@ -120,13 +72,10 @@
     </select>
     <label for="threshold">Soglia Gain (%):</label>
     <input type="number" id="threshold" value="3.0" step="0.1" min="0" />
-    <!-- Avvio manuale -->
     <button onclick="restartCycle()">▶ Avvia Analisi</button>
     <button onclick="requestWakeLock()">🔒 Mantieni Attivo</button>
     <button onclick="clearSpamFilter()">🗑️ Reset Filtro Spam</button>
   </div>
-  
-  <!-- Risultati in tempo reale -->
   <div id="results"></div>
   
   <script>
@@ -138,9 +87,7 @@
     
     let wakeLock = null;
     let isRunning = false;
-    
-    // Per il ciclo a batch
-    let allSymbols = [];   // Array: { exchange: "binance" o "bybit", symbol: "XYZ" }
+    let allSymbols = [];   // { exchange: "binance" o "bybit", symbol: "XYZ" }
     let currentIndex = 0;
     const batchSize = 150;
     let cycleStartTime = null;
@@ -216,60 +163,27 @@
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // FUNZIONI PER GENERARE LINK: Deep link e fallback
+    // FUNZIONI PER GENERARE LINK (UTILIZZANDO FALBACK SOLO)
     // ––––––––––––––––––––––––––––––––––––––––––––––––
     function getTradingViewLink(symbol, interval, exchange="BINANCE") {
       const tvInterval = getTradingViewInterval(interval);
-      if (isMobile()) {
-        // Prova a lanciare la app TradingView con il custom URL scheme
-        return {
-          deepLink: `tradingview://chart?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`,
-          fallback: `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`
-        };
-      }
+      // Utilizzo solo il fallback (HTTP) per test
       return { deepLink: null, fallback: `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark` };
     }
     
     function getExchangeLink(symbol, exchange) {
       if (exchange.toLowerCase() === 'binance') {
         const baseAsset = symbol.replace("USDC", "");
-        if (isMobile()) {
-          return {
-            deepLink: `binance://trade?market=${baseAsset}_USDC`,
-            fallback: `https://www.binance.com/en/trade/${baseAsset}_USDC`
-          };
-        }
         return { deepLink: null, fallback: `https://www.binance.com/en/trade/${baseAsset}_USDC` };
       } else if (exchange.toLowerCase() === 'bybit') {
-        if (isMobile()) {
-          return {
-            deepLink: `bybit://trade/spot?symbol=${symbol}`,
-            fallback: `https://www.bybit.com/en/trade/spot/${symbol}`
-          };
-        }
         return { deepLink: null, fallback: `https://www.bybit.com/en/trade/spot/${symbol}` };
       }
       return { deepLink: null, fallback: "#" };
     }
     
-    // Funzione che tenta di lanciare il deep link tramite un iframe.
-    // Se la app è installata, l'iframe tenterà di aprirla.
+    // Funzione "launchApp" semplificata: ora apre direttamente il fallback (HTTP)
     function launchApp(deepLink, fallback) {
-      if (!deepLink) {
-        // Non c'è deepLink (es. su desktop): apri il fallback
-        window.open(fallback, "_blank");
-        return;
-      }
-      // Crea un iframe invisibile
-      var iframe = document.createElement("iframe");
-      iframe.style.display = "none";
-      iframe.src = deepLink;
-      document.body.appendChild(iframe);
-      // Dopo 1500 ms rimuove l'iframe e, se nessuna app è stata aperta, apri il fallback
-      setTimeout(function() {
-        document.body.removeChild(iframe);
-        window.open(fallback, "_blank");
-      }, 1500);
+      window.open(fallback, "_blank");
     }
     
     // ––––––––––––––––––––––––––––––––––––––––––––––––
@@ -280,8 +194,7 @@
         const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=6`);
         const data = await res.json();
         if (!data || data.length < 6) return null;
-        let maxGain = -Infinity;
-        let bestCandle = null;
+        let maxGain = -Infinity, bestCandle = null;
         for (let i = 1; i <= 5; i++) {
           const open = parseFloat(data[i][1]);
           const close = parseFloat(data[i][4]);
@@ -292,32 +205,23 @@
               symbol,
               exchange: 'binance',
               gain: gain.toFixed(2),
-              open,
-              close,
+              open, close,
               index: i,
               timestamp: new Date(data[i][0]).toLocaleTimeString()
             };
           }
         }
         if (maxGain >= threshold) {
-          // Ottieni variazione giornaliera (ticker 24hr)
           try {
             const infoRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
             const info = await infoRes.json();
             bestCandle.dailyChange = parseFloat(info.priceChangePercent).toFixed(2);
-          } catch (tickErr) {
-            bestCandle.dailyChange = "N/A";
-          }
-          // Aggiunge i link
+          } catch (tickErr) { bestCandle.dailyChange = "N/A"; }
           let tvLink = getTradingViewLink(symbol, tf, 'BINANCE');
           let exLink = getExchangeLink(symbol, 'binance');
           bestCandle.tradingViewUrl = tvLink.fallback;
           bestCandle.exchangeUrl = exLink.fallback;
-          bestCandle._tvDeep = tvLink.deepLink;
-          bestCandle._exDeep = exLink.deepLink;
-          if (canSendAlert(symbol)) {
-            sendTelegramAlert(bestCandle, tf);
-          }
+          if (canSendAlert(symbol)) { sendTelegramAlert(bestCandle, tf); }
           return bestCandle;
         }
         return null;
@@ -333,8 +237,7 @@
         const res = await fetch(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${symbol}&interval=${bybitInterval}&limit=6`);
         const data = await res.json();
         if (data.retCode !== 0 || !data.result || !data.result.list || data.result.list.length < 6) return null;
-        let maxGain = -Infinity;
-        let bestCandle = null;
+        let maxGain = -Infinity, bestCandle = null;
         const klines = data.result.list.reverse();
         for (let i = 1; i <= 5; i++) {
           const open = parseFloat(klines[i][1]);
@@ -346,8 +249,7 @@
               symbol,
               exchange: 'bybit',
               gain: gain.toFixed(2),
-              open,
-              close,
+              open, close,
               index: i,
               timestamp: new Date(parseInt(klines[i][0])).toLocaleTimeString()
             };
@@ -362,18 +264,12 @@
             } else {
               bestCandle.dailyChange = "N/A";
             }
-          } catch (tickErr) {
-            bestCandle.dailyChange = "N/A";
-          }
+          } catch (tickErr) { bestCandle.dailyChange = "N/A"; }
           let tvLink = getTradingViewLink(symbol, tf, 'BYBIT');
           let exLink = getExchangeLink(symbol, 'bybit');
           bestCandle.tradingViewUrl = tvLink.fallback;
           bestCandle.exchangeUrl = exLink.fallback;
-          bestCandle._tvDeep = tvLink.deepLink;
-          bestCandle._exDeep = exLink.deepLink;
-          if (canSendAlert(`BYBIT_${symbol}`)) {
-            sendTelegramAlert(bestCandle, tf);
-          }
+          if (canSendAlert(`BYBIT_${symbol}`)) { sendTelegramAlert(bestCandle, tf); }
           return bestCandle;
         }
         return null;
@@ -387,7 +283,6 @@
       const exchangeIcon = data.exchange === 'bybit' ? '🟠' : '🟡';
       const exchangeName = data.exchange === 'bybit' ? 'BYBIT' : 'BINANCE';
       const quoteCurrency = data.exchange === 'bybit' ? 'USDT' : 'USDC';
-      // Nell'alert usiamo i fallback (che sono URL https)
       const message = `🚨 CRYPTO SNIPER ALERT 🚨
       
 ${exchangeIcon} Exchange: ${exchangeName}
@@ -422,18 +317,12 @@ ${exchangeIcon} Exchange: ${exchangeName}
       }
     }
     
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // RECUPERO DEL MERCATO SPOT FILTRATO:
-    // Solo coppie che terminano con "USDC" per Binance
-    // e "USDT" per Bybit.
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
     async function getBinanceSymbolListForSniper() {
       try {
         const res = await fetch("https://api.binance.com/api/v3/exchangeInfo");
         const data = await res.json();
-        return data.symbols
-                 .filter(s => s.symbol.endsWith("USDC") && s.status === "TRADING")
-                 .map(s => s.symbol);
+        return data.symbols.filter(s => s.symbol.endsWith("USDC") && s.status === "TRADING")
+                            .map(s => s.symbol);
       } catch (e) {
         console.error("Errore ciclo Binance per sniper:", e);
         return [];
@@ -445,9 +334,8 @@ ${exchangeIcon} Exchange: ${exchangeName}
         const res = await fetch("https://api.bybit.com/v5/market/instruments-info?category=spot");
         const data = await res.json();
         if (data.retCode === 0 && data.result && data.result.list) {
-          return data.result.list
-                   .filter(s => s.symbol.endsWith("USDT") && s.status === "Trading")
-                   .map(s => s.symbol);
+          return data.result.list.filter(s => s.symbol.endsWith("USDT") && s.status === "Trading")
+                                  .map(s => s.symbol);
         }
         return [];
       } catch (error) {
@@ -456,14 +344,10 @@ ${exchangeIcon} Exchange: ${exchangeName}
       }
     }
     
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // CICLO DI ELABORAZIONE A BATCH CON RISULTATI IN TEMPO REALE
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
     function appendResult(candle) {
       const container = document.getElementById("results");
       const el = document.createElement("div");
       el.className = `coin ${candle.exchange}`;
-      // Ottieni i link deep e fallback
       const tv = getTradingViewLink(candle.symbol, "1d", candle.exchange.toUpperCase());
       const ex = getExchangeLink(candle.symbol, candle.exchange);
       el.innerHTML = `
@@ -473,16 +357,15 @@ ${exchangeIcon} Exchange: ${exchangeName}
         <div>🕒 Candela n° ${candle.index + 1} | ⏰ ${candle.timestamp}</div>
         <div>🟢 Open: ${candle.open} | 🔴 Close: ${candle.close}</div>
         <div style="margin-top: 10px;">
-          <a href="#" class="tradingview-link" onclick="launchApp('${candle._tvDeep || ''}', '${candle.tradingViewUrl}'); return false;">📊 TradingView</a>
-          <a href="#" class="exchange-link ${candle.exchange}" onclick="launchApp('${candle._exDeep || ''}', '${candle.exchangeUrl}'); return false;">🔗 ${candle.exchange.toUpperCase()} Trading</a>
+          <a href="#" class="tradingview-link" onclick="launchApp('', '${candle.tradingViewUrl}'); return false;">📊 TradingView</a>
+          <a href="#" class="exchange-link ${candle.exchange}" onclick="launchApp('', '${candle.exchangeUrl}'); return false;">🔗 ${candle.exchange.toUpperCase()} Trading</a>
         </div>
         <div class="screenshot-note"></div>
       `;
       el.addEventListener("click", (e) => {
         if (e.target.tagName !== 'A') {
-          // Apertura di TradingView, usando il medesimo metodo
           const tv = getTradingViewLink(candle.symbol, "1d", candle.exchange.toUpperCase());
-          launchApp(tv.deepLink, tv.fallback);
+          launchApp('', tv.fallback);
         }
       });
       container.appendChild(el);
@@ -491,9 +374,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
     async function cycleProcessing() {
       const tf = document.getElementById("timeframe").value;
       const threshold = parseFloat(document.getElementById("threshold").value) || 3.0;
-      
       document.getElementById("results").innerHTML = "";
-      
       if (allSymbols.length === 0) {
         const [bnSymbols, bySymbols] = await Promise.all([
           getBinanceSymbolListForSniper(),
@@ -503,7 +384,6 @@ ${exchangeIcon} Exchange: ${exchangeName}
                      .concat(bySymbols.map(s => ({ exchange: 'bybit', symbol: s })));
         console.log(`Totale simboli caricati: ${allSymbols.length}`);
       }
-      
       currentIndex = 0;
       cycleStartTime = new Date();
       updateStatus(`Inizio ciclo: 0/${allSymbols.length} elaborati.`);
@@ -513,7 +393,6 @@ ${exchangeIcon} Exchange: ${exchangeName}
     async function processBatch(tf, threshold) {
       const totalSymbols = allSymbols.length;
       const batch = allSymbols.slice(currentIndex, currentIndex + batchSize);
-      
       for (let i = 0; i < batch.length; i++) {
         const coin = batch[i];
         let result = null;
@@ -522,16 +401,13 @@ ${exchangeIcon} Exchange: ${exchangeName}
         } else if (coin.exchange === 'bybit') {
           result = await getBybitMaxGain(coin.symbol, tf, threshold);
         }
-        if (result !== null) {
-          appendResult(result);
-        }
+        if (result !== null) { appendResult(result); }
         const processedCount = currentIndex + i + 1;
         const percentage = ((processedCount / totalSymbols) * 100).toFixed(1);
         const elapsedSec = Math.floor((new Date() - cycleStartTime) / 1000);
         updateStatus(`Elaborate ${processedCount}/${totalSymbols} coppie (${percentage}%). Tempo trascorso: ${elapsedSec}s.`);
         await new Promise(r => setTimeout(r, 60));
       }
-      
       currentIndex += batchSize;
       if (currentIndex < totalSymbols) {
         await processBatch(tf, threshold);
@@ -550,12 +426,10 @@ ${exchangeIcon} Exchange: ${exchangeName}
     }
     
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && wakeLock === null) {
-        requestWakeLock();
-      }
+      if (!document.hidden && wakeLock === null) { requestWakeLock(); }
     });
     
-    // NOTA: Il processo di analisi parte solo al click su "▶ Avvia Analisi".
+    // NOTA: Il processo parte solo al click su "▶ Avvia Analisi"
   </script>
 </body>
 </html>
