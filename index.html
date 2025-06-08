@@ -7,42 +7,77 @@
   <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ3J5cHRvIFNuaXBlciIsInNob3J0X25hbWUiOiJDcnlwdG9TbmlwZXIiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTExMTEiLCJ0aGVtZV9jb2xvciI6IiMyMjIyMjIiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTVRJNElpQm9aV2xuYUhROUlqRXlPQ0lpSUhacFpYZENiM2c5SWpBZ01DQXhNamdnTVRJNElpQm1hV3hzUFNJak16TXpJaUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lQZ284Y21WamRDQjNhV1IwYUQwaU1USTRMQ0FnSUdObGRtbDBhRDBpTVMwd0lHRmpiaTB6SWlCbWFXeHNQU0lqTWpJeUlpOCtQSFJsZUhRZ2VEMGlOalFpSUhrOUlqWTBJaUJtYVd4c1BTSWpSa1pHSWlCbWIyNTBMWE5wZW1VOUlqSTBJaUJtYjI1MExXWmhiV2xzZVQwaWJXOXViM053WVdObElpQjBaWGgwTFdGdVkyaHZjajBpYldsa1pHeGxJajQ4TDJSbFpuTStQQzl6ZG1jKyIsInNpemVzIjoiMTI4eDEyOCIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
   <meta name="theme-color" content="#222222">
   <style>
-    body { font-family: Arial, sans-serif; background: #111; color: #eee; padding: 10px; margin: 0; }
+    body { 
+      font-family: Arial, sans-serif; 
+      background: #111; 
+      color: #eee; 
+      padding: 10px; 
+      margin: 0;
+    }
     h1, h2, h3 { text-align: center; }
     .controls {
-      display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;
-      align-items: center; justify-content: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+      justify-content: center;
     }
-    select, input[type="number"], button {
-      margin: 5px; padding: 8px 12px; background: #333; color: #eee;
-      border: 1px solid #555; border-radius: 4px;
+    select, input[type="number"], button { 
+      margin: 5px;
+      padding: 8px 12px;
+      background: #333;
+      color: #eee;
+      border: 1px solid #555;
+      border-radius: 4px;
     }
     button { cursor: pointer; transition: background 0.3s; }
     button:hover { background: #444; }
     .status {
-      background: #333; padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: center;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      text-align: center;
     }
     .status.active { background: linear-gradient(90deg, #00ff88, #00cc66); color: #000; }
     #results {
-      padding: 10px; margin-top: 20px; background: #222; border-radius: 6px;
+      padding: 10px;
+      margin-top: 20px;
+      background: #222;
+      border-radius: 6px;
     }
     .coin {
-      padding: 15px; margin-bottom: 10px; background: linear-gradient(135deg, #222, #333);
-      border-radius: 8px; cursor: pointer; border-left: 4px solid #00ff88; transition: transform 0.2s;
+      padding: 15px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #222, #333);
+      border-radius: 8px;
+      cursor: pointer;
+      border-left: 4px solid #00ff88;
+      transition: transform 0.2s;
     }
     .coin.bybit { border-left-color: #f7931a; }
     .coin.binance { border-left-color: #f3ba2f; }
     .coin:hover { transform: translateX(5px); }
     .gain { color: #00ff88; font-weight: bold; font-size: 1.2em; }
     .exchange-badge {
-      display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: bold;
       margin-bottom: 8px;
     }
     .exchange-badge.bybit { background: #f7931a; color: #000; }
     .exchange-badge.binance { background: #f3ba2f; color: #000; }
     .tradingview-link, .exchange-link {
-      display: inline-block; padding: 6px 12px; border-radius: 4px; text-decoration: none;
-      font-size: 12px; margin: 4px 8px 4px 0; transition: background 0.3s;
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 12px;
+      margin: 4px 8px 4px 0;
+      transition: background 0.3s;
     }
     .tradingview-link { background: #1e88e5; color: white; }
     .tradingview-link:hover { background: #1976d2; }
@@ -79,22 +114,17 @@
   <div id="results"></div>
   
   <script>
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
     // COSTANTI E VARIABILI GLOBALI
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
     const TELEGRAM_TOKEN = "7919987275:AAGeKy3A-ZtmYm4RZRDEb7MVz6JrOxx95Lc";
     const TELEGRAM_CHAT_ID = "525164223";
-    
     let wakeLock = null;
     let isRunning = false;
-    let allSymbols = [];   // { exchange: "binance" o "bybit", symbol: "XYZ" }
+    let allSymbols = [];   // Array: { exchange: "binance" o "bybit", symbol: "XYZ" }
     let currentIndex = 0;
     const batchSize = 150;
     let cycleStartTime = null;
     
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
     // FUNZIONI DI SUPPORTO
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
     function isMobile() {
       return /Mobi|Android|iPhone/i.test(navigator.userAgent);
     }
@@ -119,13 +149,11 @@
       updateStatus('🗑️ Filtro spam resettato - tutti gli alert saranno nuovamente inviati');
       setTimeout(() => updateStatus('✅ Sistema pronto'), 2000);
     }
-    
     function updateStatus(message) {
       const statusEl = document.getElementById('status');
       statusEl.textContent = message;
       statusEl.className = isRunning ? 'status active' : 'status';
     }
-    
     async function requestWakeLock() {
       try {
         if ('wakeLock' in navigator) {
@@ -162,15 +190,11 @@
       }
     }
     
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
-    // FUNZIONI PER GENERARE LINK (UTILIZZANDO FALBACK SOLO)
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
+    // FUNZIONI PER GENERARE LINK (USIAMO SOLO i fallback per ora)
     function getTradingViewLink(symbol, interval, exchange="BINANCE") {
       const tvInterval = getTradingViewInterval(interval);
-      // Utilizzo solo il fallback (HTTP) per test
       return { deepLink: null, fallback: `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark` };
     }
-    
     function getExchangeLink(symbol, exchange) {
       if (exchange.toLowerCase() === 'binance') {
         const baseAsset = symbol.replace("USDC", "");
@@ -180,35 +204,35 @@
       }
       return { deepLink: null, fallback: "#" };
     }
-    
-    // Funzione "launchApp" semplificata: ora apre direttamente il fallback (HTTP)
     function launchApp(deepLink, fallback) {
       window.open(fallback, "_blank");
     }
     
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
+    function getTradingViewInterval(interval) {
+      const intervalMap = { '1m': '1', '5m': '5', '15m': '15', '30m': '30', '1h': '60', '4h': '240', '1d': '1D', '1w': '1W', '1M': '1M' };
+      return intervalMap[interval] || '5';
+    }
+    
     // FUNZIONI DI ANALISI DELLE CANDELE
-    // ––––––––––––––––––––––––––––––––––––––––––––––––
+    
     async function getBinanceMaxGain(symbol, tf, threshold) {
       try {
         const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=6`);
         const data = await res.json();
-        if (!data || data.length < 6) return null;
-        let maxGain = -Infinity, bestCandle = null;
+        if (!data || data.length < 6) {
+          console.log(`Nessun dato per ${symbol} su Binance`);
+          return null;
+        }
+        let maxGain = -Infinity;
+        let bestCandle = null;
         for (let i = 1; i <= 5; i++) {
           const open = parseFloat(data[i][1]);
           const close = parseFloat(data[i][4]);
           const gain = ((close - open) / open) * 100;
+          console.log(`Binance ${symbol} candela ${i}: gain=${gain.toFixed(2)}%`);
           if (gain > maxGain) {
             maxGain = gain;
-            bestCandle = {
-              symbol,
-              exchange: 'binance',
-              gain: gain.toFixed(2),
-              open, close,
-              index: i,
-              timestamp: new Date(data[i][0]).toLocaleTimeString()
-            };
+            bestCandle = { symbol, exchange: 'binance', gain: gain.toFixed(2), open, close, index: i, timestamp: new Date(data[i][0]).toLocaleTimeString() };
           }
         }
         if (maxGain >= threshold) {
@@ -216,7 +240,9 @@
             const infoRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
             const info = await infoRes.json();
             bestCandle.dailyChange = parseFloat(info.priceChangePercent).toFixed(2);
-          } catch (tickErr) { bestCandle.dailyChange = "N/A"; }
+          } catch (tickErr) {
+            bestCandle.dailyChange = "N/A";
+          }
           let tvLink = getTradingViewLink(symbol, tf, 'BINANCE');
           let exLink = getExchangeLink(symbol, 'binance');
           bestCandle.tradingViewUrl = tvLink.fallback;
@@ -226,7 +252,7 @@
         }
         return null;
       } catch (e) {
-        console.error('Errore Binance per', symbol, ':', e);
+        console.error('Errore Binance per', symbol, e);
         return null;
       }
     }
@@ -236,34 +262,30 @@
         const bybitInterval = getTradingViewInterval(tf).toLowerCase();
         const res = await fetch(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${symbol}&interval=${bybitInterval}&limit=6`);
         const data = await res.json();
-        if (data.retCode !== 0 || !data.result || !data.result.list || data.result.list.length < 6) return null;
-        let maxGain = -Infinity, bestCandle = null;
+        if (data.retCode !== 0 || !data.result || !data.result.list || data.result.list.length < 6) {
+          console.log(`Nessun dato per ${symbol} su Bybit`);
+          return null;
+        }
+        let maxGain = -Infinity;
+        let bestCandle = null;
         const klines = data.result.list.reverse();
         for (let i = 1; i <= 5; i++) {
           const open = parseFloat(klines[i][1]);
           const close = parseFloat(klines[i][4]);
           const gain = ((close - open) / open) * 100;
+          console.log(`Bybit ${symbol} candela ${i}: gain=${gain.toFixed(2)}%`);
           if (gain > maxGain) {
             maxGain = gain;
-            bestCandle = {
-              symbol,
-              exchange: 'bybit',
-              gain: gain.toFixed(2),
-              open, close,
-              index: i,
-              timestamp: new Date(parseInt(klines[i][0])).toLocaleTimeString()
-            };
+            bestCandle = { symbol, exchange: 'bybit', gain: gain.toFixed(2), open, close, index: i, timestamp: new Date(parseInt(klines[i][0])).toLocaleTimeString() };
           }
         }
         if (maxGain >= threshold) {
           try {
             const infoRes = await fetch(`https://api.bybit.com/v5/market/ticker?category=spot&symbol=${symbol}`);
             const info = await infoRes.json();
-            if (info.retCode === 0 && info.result && info.result.list && info.result.list.length > 0) {
+            if (info.retCode === 0 && info.result && info.result.list && info.result.list.length > 0)
               bestCandle.dailyChange = (parseFloat(info.result.list[0].price24hPcnt) * 100).toFixed(2);
-            } else {
-              bestCandle.dailyChange = "N/A";
-            }
+            else bestCandle.dailyChange = "N/A";
           } catch (tickErr) { bestCandle.dailyChange = "N/A"; }
           let tvLink = getTradingViewLink(symbol, tf, 'BYBIT');
           let exLink = getExchangeLink(symbol, 'bybit');
@@ -274,7 +296,7 @@
         }
         return null;
       } catch (e) {
-        console.error('Errore Bybit per', symbol, ':', e);
+        console.error('Errore Bybit per', symbol, e);
         return null;
       }
     }
@@ -298,23 +320,13 @@ ${exchangeIcon} Exchange: ${exchangeName}
 
 📊 TradingView: ${data.tradingViewUrl}
 🔗 ${exchangeName} Trading: ${data.exchangeUrl}`;
-      
       const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
       try {
-        await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            chat_id: TELEGRAM_CHAT_ID, 
-            text: message,
-            parse_mode: 'HTML',
-            disable_web_page_preview: false
-          })
+        await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message, parse_mode: 'HTML', disable_web_page_preview: false })
         });
         console.log(`Alert inviato per ${exchangeName}:${data.symbol}`);
-      } catch (err) {
-        console.error('Errore invio Telegram:', err);
-      }
+      } catch (err) { console.error('Errore invio Telegram:', err); }
     }
     
     async function getBinanceSymbolListForSniper() {
@@ -323,10 +335,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
         const data = await res.json();
         return data.symbols.filter(s => s.symbol.endsWith("USDC") && s.status === "TRADING")
                             .map(s => s.symbol);
-      } catch (e) {
-        console.error("Errore ciclo Binance per sniper:", e);
-        return [];
-      }
+      } catch (e) { console.error("Errore ciclo Binance per sniper:", e); return []; }
     }
     
     async function getBybitSymbolListForSniper() {
@@ -338,10 +347,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
                                   .map(s => s.symbol);
         }
         return [];
-      } catch (error) {
-        console.error('Errore ciclo Bybit per sniper:', error);
-        return [];
-      }
+      } catch (error) { console.error('Errore ciclo Bybit per sniper:', error); return []; }
     }
     
     function appendResult(candle) {
@@ -429,7 +435,7 @@ ${exchangeIcon} Exchange: ${exchangeName}
       if (!document.hidden && wakeLock === null) { requestWakeLock(); }
     });
     
-    // NOTA: Il processo parte solo al click su "▶ Avvia Analisi"
+    // NOTA: l'analisi parte solo al click su "▶ Avvia Analisi"
   </script>
 </body>
 </html>
