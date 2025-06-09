@@ -7,84 +7,53 @@
   <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ3J5cHRvIFNuaXBlciIsInNob3J0X25hbWUiOiJDcnlwdG9TbmlwZXIiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTExMTEiLCJ0aGVtZV9jb2xvciI6IiMyMjIyMjIiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTVRJNElpQm9aV2xuYUhROUlqRXlPQ0lpSUhacFpYZENiM2c5SWpBZ01DQXhNamdnTVRJNElpQm1hV3hzUFNJak16TXpJaUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lQZ284Y21WamRDQjNhV1IwYUQwaU1USTRMQ0FnSUdObGRtbDBhRDBpTVMwd0lHRmpiaTB6SWlCbWFXeHNQU0lqTWpJeUlpOCtQSFJsZUhRZ2VEMGlOalFpSUhrOUlqWTBJaUJtYVd4c1BTSWpSa1pHSWlCbWIyNTBMWE5wZW1VOUlqSTBJaUJtYjI1MExXWmhiV2xzZVQwaWJXOXViM053WVdObElpQjBaWGgwTFdGdVkyaHZjajBpYldsa1pHeGxJajQ4TDJSbFpuTStQQzl6ZG1jKyIsInNpemVzIjoiMTI4eDEyOCIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
   <meta name="theme-color" content="#222222">
   <style>
-    /* Layout base in modalità scura */
-    body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #eee;
-      padding: 10px;
+    /* Layout in modalità scura */
+    body { 
+      font-family: Arial, sans-serif; 
+      background: #111; 
+      color: #eee; 
+      padding: 10px; 
       margin: 0;
     }
     h1, h2, h3 { text-align: center; }
     .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-      align-items: center;
-      justify-content: center;
+      display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;
+      align-items: center; justify-content: center;
     }
-    select, input[type="number"], button {
-      margin: 5px;
-      padding: 8px 12px;
-      background: #333;
-      color: #eee;
-      border: 1px solid #555;
-      border-radius: 4px;
+    select, input[type="number"], button { 
+      margin: 5px; padding: 8px 12px;
+      background: #333; color: #eee;
+      border: 1px solid #555; border-radius: 4px;
     }
     button { cursor: pointer; transition: background 0.3s; }
     button:hover { background: #444; }
     .status {
-      background: #333;
-      padding: 10px;
-      border-radius: 4px;
-      margin-bottom: 15px;
-      text-align: center;
+      background: #333; padding: 10px; border-radius: 4px;
+      margin-bottom: 15px; text-align: center;
     }
     .status.active {
-      background: linear-gradient(90deg, #00ff88, #00cc66);
-      color: #000;
+      background: linear-gradient(90deg, #00ff88, #00cc66); color: #000;
     }
     #results {
-      padding: 10px;
-      margin-top: 20px;
-      background: #222;
-      border-radius: 6px;
+      padding: 10px; margin-top: 20px; background: #222; border-radius: 6px;
     }
     .coin {
-      padding: 15px;
-      margin-bottom: 10px;
-      background: linear-gradient(135deg, #222, #333);
-      border-radius: 8px;
-      cursor: pointer;
-      border-left: 4px solid #00ff88;
-      transition: transform 0.2s;
+      padding: 15px; margin-bottom: 10px; background: linear-gradient(135deg, #222, #333);
+      border-radius: 8px; cursor: pointer; border-left: 4px solid #00ff88; transition: transform 0.2s;
     }
     .coin.bybit { border-left-color: #f7931a; }
     .coin.binance { border-left-color: #f3ba2f; }
     .coin:hover { transform: translateX(5px); }
-    .gain {
-      color: #00ff88;
-      font-weight: bold;
-      font-size: 1.2em;
-    }
+    .gain { color: #00ff88; font-weight: bold; font-size: 1.2em; }
     .exchange-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: bold;
-      margin-bottom: 8px;
+      display: inline-block; padding: 4px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: bold; margin-bottom: 8px;
     }
     .exchange-badge.bybit { background: #f7931a; color: #000; }
     .exchange-badge.binance { background: #f3ba2f; color: #000; }
     .tradingview-link, .exchange-link {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 4px;
-      text-decoration: none;
-      font-size: 12px;
-      margin: 4px 8px 4px 0;
+      display: inline-block; padding: 6px 12px; border-radius: 4px;
+      text-decoration: none; font-size: 12px; margin: 4px 8px 4px 0;
       transition: background 0.3s;
     }
     .tradingview-link { background: #1e88e5; color: white; }
@@ -96,12 +65,8 @@
     .exchange-link.bybit { background: #f7931a; color: #000; }
     .exchange-link.bybit:hover { background: #d97e15; }
     .screenshot-note {
-      background: #444;
-      padding: 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      margin-top: 8px;
-      color: #aaa;
+      background: #444; padding: 8px;
+      border-radius: 4px; font-size: 12px; margin-top: 8px; color: #aaa;
     }
   </style>
 </head>
@@ -129,23 +94,28 @@
   <div id="results"></div>
   
   <script>
-    // COSTANTI E VARIABILI GLOBALI
+    // --- COSTANTI E VARIABILI GLOBALI ---
     const TELEGRAM_TOKEN = "7919987275:AAGeKy3A-ZtmYm4RZRDEb7MVz6JrOxx95Lc";
     const TELEGRAM_CHAT_ID = "525164223";
     let wakeLock = null;
     let isRunning = false;
-    let allSymbols = []; // Array: { exchange: "binance" o "bybit", symbol: "XYZ" }
+    let allSymbols = []; // Array di oggetti: { exchange: "binance" o "bybit", symbol: "XYZ" }
     let currentIndex = 0;
     const batchSize = 150;
     let cycleStartTime = null;
     
-    // FUNZIONI DI SUPPORTO
+    // --- FUNZIONI DI SUPPORTO ---
     function isMobile() {
       return /Mobi|Android|iPhone/i.test(navigator.userAgent);
     }
+    
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('data:application/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBpbnN0YWxsZWQnKTsKfSk7CgpzZWxmLmFkZEV2ZW50TGlzdGVuZXIoJ2FjdGl2YXRlJywgZXZlbnQgPT4gewogIGNvbnNvbGUubG9nKCdTZXJ2aWNlIFdvcmtlciBhY3RpdmF0ZWQnKTsKfSk7');
+      navigator.serviceWorker.register(
+        'data:application/javascript;base64,' +
+        btoa("self.addEventListener('install', e=>{console.log('Service Worker Install');});")
+      );
     }
+    
     let sentAlerts = new Map();
     function canSendAlert(symbol) {
       const now = Date.now();
@@ -163,28 +133,31 @@
       setTimeout(() => updateStatus('✅ Sistema pronto'), 2000);
     }
     function updateStatus(message) {
-      const statusEl = document.getElementById('status');
+      const statusEl = document.getElementById("status");
       statusEl.textContent = message;
-      statusEl.className = isRunning ? 'status active' : 'status';
+      statusEl.className = isRunning ? "status active" : "status";
     }
+    
     async function requestWakeLock() {
       try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen');
-          updateStatus('🔒 Wake Lock attivo - schermo mantenuto acceso');
+        if ("wakeLock" in navigator) {
+          wakeLock = await navigator.wakeLock.request("screen");
+          updateStatus("🔒 Wake Lock attivo - schermo mantenuto acceso");
         } else {
           startKeepAliveTimer();
-          updateStatus('🔄 Keep-alive attivato (compatibilità)');
+          updateStatus("🔄 Keep-alive attivato (compatibilità)");
         }
       } catch (err) {
-        console.error('Errore wake lock:', err);
+        console.error("Errore wake lock:", err);
         startKeepAliveTimer();
-        updateStatus('🔄 Keep-alive (fallback)');
+        updateStatus("🔄 Keep-alive (fallback)");
       }
     }
+    
     function startKeepAliveTimer() {
-      setInterval(() => console.log('Keep-alive tick:', new Date().toLocaleTimeString()), 30000);
+      setInterval(() => console.log("Keep-alive tick:", new Date().toLocaleTimeString()), 30000);
     }
+    
     function initAudioKeepAlive() {
       try {
         const ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -195,21 +168,21 @@
         gain.gain.setValueAtTime(0, ac.currentTime);
         osc.frequency.setValueAtTime(20000, ac.currentTime);
         osc.start();
-        console.log('Audio keep-alive inizializzato');
+        console.log("Audio keep-alive inizializzato");
         return true;
       } catch (err) {
-        console.error('Audio keep-alive fallito:', err);
+        console.error("Audio keep-alive fallito:", err);
         return false;
       }
     }
     
-    // FUNZIONI PER CALCOLARE INDICATORI: PIVOT HIGH (con decimali originali) e EMA10
+    // --- CALCOLO DEGLI INDICATORI: PIVOT HIGH & EMA10 ---
     function computePivotHigh(candles) {
       let pivot = null, decimals = 0;
       for (let i = 1; i < candles.length - 1; i++) {
         let currentHighStr = candles[i][2];
         let currentHigh = parseFloat(currentHighStr);
-        let candleDecimals = (currentHighStr.indexOf('.') !== -1) ? currentHighStr.split('.')[1].length : 0;
+        let candleDecimals = (currentHighStr.indexOf(".") !== -1) ? currentHighStr.split(".")[1].length : 0;
         let prevHigh = parseFloat(candles[i - 1][2]);
         let nextHigh = parseFloat(candles[i + 1][2]);
         if (currentHigh > prevHigh && currentHigh > nextHigh) {
@@ -231,14 +204,22 @@
       return ema;
     }
     
-    // FUNZIONI PER GENERARE LINK
+    // --- GENERAZIONE DEI LINK ---
     function getTradingViewInterval(interval) {
-      const m = {
-        '1m': '1', '5m': '5', '15m': '15', '30m': '30',
-        '1h': '60', '4h': '240', '1d': '1D', '1w': '1W', '1M': '1M'
+      const map = {
+        "1m": "1",
+        "5m": "5",
+        "15m": "15",
+        "30m": "30",
+        "1h": "60",
+        "4h": "240",
+        "1d": "1D",
+        "1w": "1W",
+        "1M": "1M"
       };
-      return m[interval] || '5';
+      return map[interval] || "5";
     }
+    
     function getTradingViewLink(symbol, interval, exchange = "BINANCE") {
       const tvInterval = getTradingViewInterval(interval);
       if (isMobile()) {
@@ -249,6 +230,7 @@
       }
       return { deepLink: null, fallback: `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark` };
     }
+    
     function getExchangeLink(symbol, exchange) {
       if (exchange.toLowerCase() === "binance") {
         const baseAsset = symbol.replace("USDC", "");
@@ -260,10 +242,10 @@
         }
         return { deepLink: null, fallback: `https://www.binance.com/en/trade/${baseAsset}_USDC` };
       } else if (exchange.toLowerCase() === "bybit") {
-        // Se il simbolo termina con "USDT", inseriamo la barra prima di USDT
+        // Se il simbolo termina con "USDT", ricostruisce il pair come "COIN/USDT"
         if (symbol.endsWith("USDT")) {
           const baseAsset = symbol.slice(0, -4);
-          const pair = `${baseAsset}/USDT`;  // Es. "BTC/USDT"
+          const pair = `${baseAsset}/USDT`;
           if (isMobile()) {
             return {
               deepLink: `bybit://trade/spot/${pair}`,
@@ -278,7 +260,6 @@
     }
     
     function launchApp(deepLink, fallback) {
-      // Questa funzione usa window.location.href per forzare l'apertura
       if (deepLink) {
         window.location.href = deepLink;
         setTimeout(() => { window.location.href = fallback; }, 1500);
@@ -287,17 +268,17 @@
       }
     }
     
-    // FUNZIONI DI ANALISI DELLE CANDELE
+    // --- ANALISI DELLE CANDELE SU BINANCE ---
     async function getBinanceMaxGain(symbol, tf, threshold) {
       try {
-        // Richiediamo 20 candeline per avere dati sufficienti per EMA10 e Pivot
+        // Richiediamo 20 candeline per avere dati sufficienti per EMA e Pivot
         const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=20`);
         const data = await res.json();
-        if (!data || data.length < 20) { 
+        if (!data || data.length < 20) {
           console.log(`Nessun dato per ${symbol} su Binance`);
           return null;
         }
-        // Per il gain prendiamo le ultime 6 candeline
+        // Per il gain usiamo le ultime 6 candeline
         let subset = data.slice(data.length - 6);
         let maxGain = -Infinity, bestIndex = -1;
         for (let i = 0; i < subset.length; i++) {
@@ -317,16 +298,15 @@
           index: bestIndex,
           timestamp: new Date(data[bestIndex][0]).toLocaleTimeString()
         };
-        // Calcola il Pivot High utilizzando tutte le candeline (mantiene i decimali originali)
+        // Calcola il Pivot High su tutte le candeline
         let pivotObj = computePivotHigh(data);
         bestCandle.pivotHigh = (pivotObj.pivot !== null) ? pivotObj.pivot.toFixed(pivotObj.decimals) : "N/A";
         // Calcola EMA10 sui prezzi di chiusura
         let closes = data.map(c => parseFloat(c[4]));
         let ema10 = computeEMA(closes, 10);
         bestCandle.ema10Above = (closes[closes.length - 1] > ema10) ? "Sì" : "No";
-        // Confronto: verifica se il Pivot High supera la EMA10
         bestCandle.pivotAboveEMA10 = (pivotObj.pivot !== null && pivotObj.pivot > ema10) ? "Sì" : "No";
-        // Ottieni variazione giornaliera tramite ticker 24hr
+        // Variazione giornaliera
         try {
           const infoRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
           const info = await infoRes.json();
@@ -338,9 +318,13 @@
         bestCandle.exchangeUrl = (isMobile() && exLink.deepLink) ? exLink.deepLink : exLink.fallback;
         if (canSendAlert(symbol)) { sendTelegramAlert(bestCandle, tf); }
         return bestCandle;
-      } catch (e) { console.error("Errore Binance per", symbol, e); return null; }
+      } catch (e) {
+        console.error("Errore Binance per", symbol, e);
+        return null;
+      }
     }
     
+    // --- ANALISI DELLE CANDELE SU BYBIT ---
     async function getBybitMaxGain(symbol, tf, threshold) {
       try {
         const bybitInterval = getTradingViewInterval(tf).toLowerCase();
@@ -357,7 +341,7 @@
           let open = parseFloat(subset[i][1]);
           let close = parseFloat(subset[i][4]);
           let gain = ((close - open) / open) * 100;
-          console.log(`Bybit ${symbol}: candela ${i + (data.length - 6)} gain=${gain.toFixed(2)}%`);
+          console.log(`Bybit ${symbol}: candela ${i+(data.length-6)} gain=${gain.toFixed(2)}%`);
           if (gain > maxGain) { maxGain = gain; bestIndex = i + (data.length - 6); }
         }
         if (maxGain < threshold) return null;
@@ -370,15 +354,12 @@
           index: bestIndex,
           timestamp: new Date(parseInt(data[bestIndex][0])).toLocaleTimeString()
         };
-        // Calcola il Pivot High
         let pivotObj = computePivotHigh(data);
         bestCandle.pivotHigh = (pivotObj.pivot !== null) ? pivotObj.pivot.toFixed(pivotObj.decimals) : "N/A";
-        // Calcola EMA10 sui closing prices
         let closes = data.map(c => parseFloat(c[4]));
         let ema10 = computeEMA(closes, 10);
         bestCandle.ema10Above = (closes[closes.length - 1] > ema10) ? "Sì" : "No";
         bestCandle.pivotAboveEMA10 = (pivotObj.pivot !== null && pivotObj.pivot > ema10) ? "Sì" : "No";
-        // Ottieni la variazione giornaliera
         try {
           const infoRes = await fetch(`https://api.bybit.com/v5/market/ticker?category=spot&symbol=${symbol}`);
           const info = await infoRes.json();
@@ -392,9 +373,13 @@
         bestCandle.exchangeUrl = (isMobile() && exLink.deepLink) ? exLink.deepLink : exLink.fallback;
         if (canSendAlert("BYBIT_" + symbol)) { sendTelegramAlert(bestCandle, tf); }
         return bestCandle;
-      } catch (e) { console.error("Errore Bybit per", symbol, e); return null; }
+      } catch (e) {
+        console.error("Errore Bybit per", symbol, e);
+        return null;
+      }
     }
     
+    // --- INVIO MESSAGGIO TELEGRAM (FORMATO HTML) ---
     async function sendTelegramAlert(data, tf) {
       const exchangeIcon = data.exchange === "bybit" ? "🟠" : "🟡";
       const exchangeName = data.exchange === "bybit" ? "BYBIT" : "BINANCE";
@@ -413,7 +398,7 @@
 <b>Prezzo > EMA10:</b> ${data.ema10Above}<br/><br/>
 <b>📊 TradingView:</b> <a href="tradingview://chart/?symbol=${exchangeName}:${data.symbol}&interval=${getTradingViewInterval(tf)}&theme=dark">Apri TradingView</a><br/>
 <b>🔗 ${exchangeName} Trading:</b> <a href="${
-  exchangeName === "BINANCE" 
+  exchangeName === "BINANCE"
     ? "binance://trade?market=" + data.symbol.replace("USDC", "") + "_USDC"
     : "bybit://trade/spot/" + data.symbol.slice(0, -4) + "/USDT"
 }">Apri ${exchangeName} Trading</a>`;
@@ -429,15 +414,21 @@
           })
         });
         console.log(`Alert inviato per ${exchangeName}:${data.symbol}`);
-      } catch (err) { console.error("Errore invio Telegram:", err); }
+      } catch (err) {
+        console.error("Errore invio Telegram:", err);
+      }
     }
     
+    // --- RECUPERO DEL MERCATO SPOT ---
     async function getBinanceSymbolListForSniper() {
       try {
         const res = await fetch("https://api.binance.com/api/v3/exchangeInfo");
         const data = await res.json();
         return data.symbols.filter(s => s.symbol.endsWith("USDC") && s.status === "TRADING").map(s => s.symbol);
-      } catch (e) { console.error("Errore ciclo Binance per sniper:", e); return []; }
+      } catch (e) {
+        console.error("Errore ciclo Binance per sniper:", e);
+        return [];
+      }
     }
     
     async function getBybitSymbolListForSniper() {
@@ -447,9 +438,13 @@
         if (data.retCode === 0 && data.result && data.result.list)
           return data.result.list.filter(s => s.symbol.endsWith("USDT") && s.status === "Trading").map(s => s.symbol);
         return [];
-      } catch (e) { console.error("Errore ciclo Bybit per sniper:", e); return []; }
+      } catch (e) {
+        console.error("Errore ciclo Bybit per sniper:", e);
+        return [];
+      }
     }
     
+    // --- APPEND RESULT ---
     function appendResult(candle) {
       const container = document.getElementById("results");
       const el = document.createElement("div");
@@ -482,6 +477,7 @@
       container.appendChild(el);
     }
     
+    // --- CICLO DI PROCESSING ---
     async function cycleProcessing() {
       const tf = document.getElementById("timeframe").value;
       const threshold = parseFloat(document.getElementById("threshold").value) || 3.0;
@@ -537,7 +533,7 @@
       if (!document.hidden && wakeLock === null) { requestWakeLock(); }
     });
     
-    // NOTA: il processo di analisi parte solo al click su "▶ Avvia Analisi".
+    // Il processo parte solo al click su "▶ Avvia Analisi"
   </script>
 </body>
 </html>
