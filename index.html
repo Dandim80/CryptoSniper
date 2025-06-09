@@ -1,9 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crypto Sniper Enhanced - Debug</title>
+  <title>Crypto Sniper Enhanced</title>
   <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ3J5cHRvIFNuaXBlciIsInNob3J0X25hbWUiOiJDcnlwdG9TbmlwZXIiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTExMTEiLCJ0aGVtZV9jb2xvciI6IiMyMjIyMjIiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTVRJNElpQm9aV2xuYUhROUlqRXlPQ0lpSUhacFpYZENiM2c5SWpBZ01DQXhNamdnTVRJNElpQm1hV3hzUFNJak16TXpJaUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lQZ284Y21WamRDQjNhV1IwYUQwaU1USTRMQ0FnSUdObGRtbDBhRDBpTVMwd0lHRmpiaTB6SWlCbWFXeHNQU0lqTWpJeUlpOCtQSFJsZUhRZ2VEMGlOalFpSUhrOUlqWTBJaUJtYVd4c1BTSWpSa1pHSWlCbWIyNTBMWE5wZW1VOUlqSTBJaUJtYjI1MExXWmhiV2xzZVQwaWJXOXViM053WVdObElpQjBaWGgwTFdGdVkyaHZjajBpYldsa1pHeGxJajQ4TDJSbFpuTStQQzl6ZG1jKyIsInNpemVzIjoiMTI4eDEyOCIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
   <meta name="theme-color" content="#222222">
   <style>
@@ -40,7 +40,10 @@
       margin-bottom: 15px;
       text-align: center;
     }
-    .status.active { background: linear-gradient(90deg, #00ff88, #00cc66); color: #000; }
+    .status.active {
+      background: linear-gradient(90deg, #00ff88, #00cc66);
+      color: #000;
+    }
     #results {
       padding: 10px;
       margin-top: 20px;
@@ -87,11 +90,18 @@
     .exchange-link.binance:hover { background: #d4a027; }
     .exchange-link.bybit { background: #f7931a; color: #000; }
     .exchange-link.bybit:hover { background: #d97e15; }
-    .screenshot-note { background: #444; padding: 8px; border-radius: 4px; font-size: 12px; margin-top: 8px; color: #aaa; }
+    .screenshot-note { 
+      background: #444;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-top: 8px;
+      color: #aaa;
+    }
   </style>
 </head>
 <body>
-  <h1>📈 Crypto Sniper Enhanced - Debug</h1>
+  <h1>📈 Crypto Sniper Enhanced</h1>
   <div class="status" id="status">⏸ In attesa di avvio...</div>
   <div class="controls">
     <label for="timeframe">Timeframe:</label>
@@ -190,39 +200,67 @@
       }
     }
     
-    // FUNZIONI PER GENERARE LINK (USIAMO SOLO i fallback per ora)
+    // FUNZIONI PER GENERARE LINK
+    function getTradingViewInterval(interval) {
+      const m = {
+        '1m': '1', '5m': '5', '15m': '15', '30m': '30',
+        '1h': '60', '4h': '240', '1d': '1D', '1w': '1W', '1M': '1M'
+      };
+      return m[interval] || '5';
+    }
     function getTradingViewLink(symbol, interval, exchange="BINANCE") {
       const tvInterval = getTradingViewInterval(interval);
+      if (isMobile()) {
+        return {
+          deepLink: `tradingview://chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`,
+          fallback: `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark`
+        };
+      }
       return { deepLink: null, fallback: `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}&interval=${tvInterval}&theme=dark` };
     }
     function getExchangeLink(symbol, exchange) {
       if (exchange.toLowerCase() === 'binance') {
         const baseAsset = symbol.replace("USDC", "");
+        if (isMobile()) {
+          return {
+            deepLink: `binance://trade?market=${baseAsset}_USDC`,
+            fallback: `https://www.binance.com/en/trade/${baseAsset}_USDC`
+          };
+        }
         return { deepLink: null, fallback: `https://www.binance.com/en/trade/${baseAsset}_USDC` };
       } else if (exchange.toLowerCase() === 'bybit') {
+        // Correzione: per simboli che terminano con "USDT", separiamo con "/"
+        if (symbol.endsWith("USDT")) {
+          const baseAsset = symbol.slice(0, -4);
+          const pair = `${baseAsset}/USDT`;
+          if (isMobile()) {
+            return {
+              deepLink: `bybit://trade/spot/${pair}`,
+              fallback: `https://www.bybit.com/en/trade/spot/${pair}`
+            };
+          }
+          return { deepLink: null, fallback: `https://www.bybit.com/en/trade/spot/${pair}` };
+        }
         return { deepLink: null, fallback: `https://www.bybit.com/en/trade/spot/${symbol}` };
       }
       return { deepLink: null, fallback: "#" };
     }
-    function launchApp(deepLink, fallback) {
-      window.open(fallback, "_blank");
-    }
     
-    function getTradingViewInterval(interval) {
-      const intervalMap = { '1m': '1', '5m': '5', '15m': '15', '30m': '30', '1h': '60', '4h': '240', '1d': '1D', '1w': '1W', '1M': '1M' };
-      return intervalMap[interval] || '5';
+    function launchApp(deepLink, fallback) {
+      if (deepLink) {
+        window.location.href = deepLink;
+        setTimeout(() => { window.location.href = fallback; }, 1500);
+      } else {
+        window.location.href = fallback;
+      }
     }
     
     // FUNZIONI DI ANALISI DELLE CANDELE
-    
     async function getBinanceMaxGain(symbol, tf, threshold) {
       try {
         const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=6`);
         const data = await res.json();
-        if (!data || data.length < 6) {
-          console.log(`Nessun dato per ${symbol} su Binance`);
-          return null;
-        }
+        if (!data || data.length < 6) { console.log(`Nessun dato per ${symbol} su Binance`); return null; }
         let maxGain = -Infinity;
         let bestCandle = null;
         for (let i = 1; i <= 5; i++) {
@@ -232,7 +270,14 @@
           console.log(`Binance ${symbol} candela ${i}: gain=${gain.toFixed(2)}%`);
           if (gain > maxGain) {
             maxGain = gain;
-            bestCandle = { symbol, exchange: 'binance', gain: gain.toFixed(2), open, close, index: i, timestamp: new Date(data[i][0]).toLocaleTimeString() };
+            bestCandle = {
+              symbol,
+              exchange: 'binance',
+              gain: gain.toFixed(2),
+              open, close,
+              index: i,
+              timestamp: new Date(data[i][0]).toLocaleTimeString()
+            };
           }
         }
         if (maxGain >= threshold) {
@@ -245,8 +290,8 @@
           }
           let tvLink = getTradingViewLink(symbol, tf, 'BINANCE');
           let exLink = getExchangeLink(symbol, 'binance');
-          bestCandle.tradingViewUrl = tvLink.fallback;
-          bestCandle.exchangeUrl = exLink.fallback;
+          bestCandle.tradingViewUrl = (isMobile() && tvLink.deepLink) ? tvLink.deepLink : tvLink.fallback;
+          bestCandle.exchangeUrl = (isMobile() && exLink.deepLink) ? exLink.deepLink : exLink.fallback;
           if (canSendAlert(symbol)) { sendTelegramAlert(bestCandle, tf); }
           return bestCandle;
         }
@@ -262,7 +307,7 @@
         const bybitInterval = getTradingViewInterval(tf).toLowerCase();
         const res = await fetch(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${symbol}&interval=${bybitInterval}&limit=6`);
         const data = await res.json();
-        if (data.retCode !== 0 || !data.result || !data.result.list || data.result.list.length < 6) {
+        if (data.retCode !== 0 || !data.result || !data.result.list || data.result.list.length < 6) { 
           console.log(`Nessun dato per ${symbol} su Bybit`);
           return null;
         }
@@ -276,7 +321,14 @@
           console.log(`Bybit ${symbol} candela ${i}: gain=${gain.toFixed(2)}%`);
           if (gain > maxGain) {
             maxGain = gain;
-            bestCandle = { symbol, exchange: 'bybit', gain: gain.toFixed(2), open, close, index: i, timestamp: new Date(parseInt(klines[i][0])).toLocaleTimeString() };
+            bestCandle = {
+              symbol,
+              exchange: 'bybit',
+              gain: gain.toFixed(2),
+              open, close,
+              index: i,
+              timestamp: new Date(parseInt(klines[i][0])).toLocaleTimeString()
+            };
           }
         }
         if (maxGain >= threshold) {
@@ -286,11 +338,13 @@
             if (info.retCode === 0 && info.result && info.result.list && info.result.list.length > 0)
               bestCandle.dailyChange = (parseFloat(info.result.list[0].price24hPcnt) * 100).toFixed(2);
             else bestCandle.dailyChange = "N/A";
-          } catch (tickErr) { bestCandle.dailyChange = "N/A"; }
+          } catch (tickErr) {
+            bestCandle.dailyChange = "N/A";
+          }
           let tvLink = getTradingViewLink(symbol, tf, 'BYBIT');
           let exLink = getExchangeLink(symbol, 'bybit');
-          bestCandle.tradingViewUrl = tvLink.fallback;
-          bestCandle.exchangeUrl = exLink.fallback;
+          bestCandle.tradingViewUrl = (isMobile() && tvLink.deepLink) ? tvLink.deepLink : tvLink.fallback;
+          bestCandle.exchangeUrl = (isMobile() && exLink.deepLink) ? exLink.deepLink : exLink.fallback;
           if (canSendAlert(`BYBIT_${symbol}`)) { sendTelegramAlert(bestCandle, tf); }
           return bestCandle;
         }
@@ -305,37 +359,46 @@
       const exchangeIcon = data.exchange === 'bybit' ? '🟠' : '🟡';
       const exchangeName = data.exchange === 'bybit' ? 'BYBIT' : 'BINANCE';
       const quoteCurrency = data.exchange === 'bybit' ? 'USDT' : 'USDC';
-      const message = `🚨 CRYPTO SNIPER ALERT 🚨
-      
-${exchangeIcon} Exchange: ${exchangeName}
-🔸 Coin: ${data.symbol}
-💰 Quote: ${quoteCurrency}
-🔸 Timeframe: ${tf}
-🔸 Gain: ${data.gain}%
-📆 24h: ${data.dailyChange}%
-🕒 Candela n° ${data.index + 1}
-🟢 Open: ${data.open}
-🔴 Close: ${data.close}
-⏰ Timestamp: ${data.timestamp}
-
-📊 TradingView: ${data.tradingViewUrl}
-🔗 ${exchangeName} Trading: ${data.exchangeUrl}`;
-      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+      const msg = `<b>🚨 CRYPTO SNIPER ALERT 🚨</b><br/><br/>
+<b>${exchangeIcon} Exchange:</b> ${exchangeName}<br/>
+<b>🔸 Coin:</b> ${data.symbol}<br/>
+<b>💰 Quote:</b> ${quoteCurrency}<br/>
+<b>🔸 Timeframe:</b> ${tf}<br/>
+<b>🔸 Gain:</b> ${data.gain}%<br/>
+<b>📆 24h:</b> ${data.dailyChange}%<br/>
+<b>🕒 Candela n°:</b> ${data.index + 1} | ⏰ ${data.timestamp}<br/>
+<b>🟢 Open:</b> ${data.open} | <b>🔴 Close:</b> ${data.close}<br/><br/>
+<b>📊 TradingView:</b> <a href="tradingview://chart/?symbol=${exchangeName}:${data.symbol}&interval=${getTradingViewInterval(tf)}&theme=dark">Apri TradingView</a><br/>
+<b>🔗 ${exchangeName} Trading:</b> <a href="${
+        (exchangeName==='BINANCE'
+            ? "binance://trade?market=" + data.symbol.replace("USDC","") + "_USDC"
+            : "bybit://trade/spot/" + data.symbol.slice(0, -4) + "/USDT")}">Apri ${exchangeName} Trading</a>`;
       try {
-        await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message, parse_mode: 'HTML', disable_web_page_preview: false })
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: msg,
+            parse_mode: "HTML",
+            disable_web_page_preview: false
+          })
         });
         console.log(`Alert inviato per ${exchangeName}:${data.symbol}`);
-      } catch (err) { console.error('Errore invio Telegram:', err); }
+      } catch (err) {
+        console.error('Errore invio Telegram:', err);
+      }
     }
     
     async function getBinanceSymbolListForSniper() {
       try {
         const res = await fetch("https://api.binance.com/api/v3/exchangeInfo");
         const data = await res.json();
-        return data.symbols.filter(s => s.symbol.endsWith("USDC") && s.status === "TRADING")
-                            .map(s => s.symbol);
-      } catch (e) { console.error("Errore ciclo Binance per sniper:", e); return []; }
+        return data.symbols.filter(s => s.symbol.endsWith("USDC") && s.status === "TRADING").map(s => s.symbol);
+      } catch (e) {
+        console.error("Errore ciclo Binance per sniper:", e);
+        return [];
+      }
     }
     
     async function getBybitSymbolListForSniper() {
@@ -343,11 +406,13 @@ ${exchangeIcon} Exchange: ${exchangeName}
         const res = await fetch("https://api.bybit.com/v5/market/instruments-info?category=spot");
         const data = await res.json();
         if (data.retCode === 0 && data.result && data.result.list) {
-          return data.result.list.filter(s => s.symbol.endsWith("USDT") && s.status === "Trading")
-                                  .map(s => s.symbol);
+          return data.result.list.filter(s => s.symbol.endsWith("USDT") && s.status === "Trading").map(s => s.symbol);
         }
         return [];
-      } catch (error) { console.error('Errore ciclo Bybit per sniper:', error); return []; }
+      } catch (error) {
+        console.error("Errore ciclo Bybit per sniper:", error);
+        return [];
+      }
     }
     
     function appendResult(candle) {
@@ -363,15 +428,15 @@ ${exchangeIcon} Exchange: ${exchangeName}
         <div>🕒 Candela n° ${candle.index + 1} | ⏰ ${candle.timestamp}</div>
         <div>🟢 Open: ${candle.open} | 🔴 Close: ${candle.close}</div>
         <div style="margin-top: 10px;">
-          <a href="#" class="tradingview-link" onclick="launchApp('', '${candle.tradingViewUrl}'); return false;">📊 TradingView</a>
-          <a href="#" class="exchange-link ${candle.exchange}" onclick="launchApp('', '${candle.exchangeUrl}'); return false;">🔗 ${candle.exchange.toUpperCase()} Trading</a>
+          <a href="#" class="tradingview-link" onclick="launchApp('', '${tv.fallback}'); return false;">📊 TradingView</a>
+          <a href="#" class="exchange-link ${candle.exchange}" onclick="launchApp('', '${ex.fallback}'); return false;">🔗 ${candle.exchange.toUpperCase()} Trading</a>
         </div>
         <div class="screenshot-note"></div>
       `;
       el.addEventListener("click", (e) => {
-        if (e.target.tagName !== 'A') {
+        if (e.target.tagName !== "A") {
           const tv = getTradingViewLink(candle.symbol, "1d", candle.exchange.toUpperCase());
-          launchApp('', tv.fallback);
+          launchApp("", tv.fallback);
         }
       });
       container.appendChild(el);
@@ -386,8 +451,8 @@ ${exchangeIcon} Exchange: ${exchangeName}
           getBinanceSymbolListForSniper(),
           getBybitSymbolListForSniper()
         ]);
-        allSymbols = bnSymbols.map(s => ({ exchange: 'binance', symbol: s }))
-                     .concat(bySymbols.map(s => ({ exchange: 'bybit', symbol: s })));
+        allSymbols = bnSymbols.map(s => ({ exchange: "binance", symbol: s }))
+                     .concat(bySymbols.map(s => ({ exchange: "bybit", symbol: s })));
         console.log(`Totale simboli caricati: ${allSymbols.length}`);
       }
       currentIndex = 0;
@@ -397,29 +462,26 @@ ${exchangeIcon} Exchange: ${exchangeName}
     }
     
     async function processBatch(tf, threshold) {
-      const totalSymbols = allSymbols.length;
+      const total = allSymbols.length;
       const batch = allSymbols.slice(currentIndex, currentIndex + batchSize);
       for (let i = 0; i < batch.length; i++) {
         const coin = batch[i];
-        let result = null;
-        if (coin.exchange === 'binance') {
-          result = await getBinanceMaxGain(coin.symbol, tf, threshold);
-        } else if (coin.exchange === 'bybit') {
-          result = await getBybitMaxGain(coin.symbol, tf, threshold);
-        }
+        let result = coin.exchange === "binance"
+          ? await getBinanceMaxGain(coin.symbol, tf, threshold)
+          : await getBybitMaxGain(coin.symbol, tf, threshold);
         if (result !== null) { appendResult(result); }
-        const processedCount = currentIndex + i + 1;
-        const percentage = ((processedCount / totalSymbols) * 100).toFixed(1);
-        const elapsedSec = Math.floor((new Date() - cycleStartTime) / 1000);
-        updateStatus(`Elaborate ${processedCount}/${totalSymbols} coppie (${percentage}%). Tempo trascorso: ${elapsedSec}s.`);
+        const count = currentIndex + i + 1;
+        const perc = ((count / total) * 100).toFixed(1);
+        const elapsed = Math.floor((new Date() - cycleStartTime) / 1000);
+        updateStatus(`Elaborate ${count}/${total} coppie (${perc}%). Tempo: ${elapsed}s.`);
         await new Promise(r => setTimeout(r, 60));
       }
       currentIndex += batchSize;
-      if (currentIndex < totalSymbols) {
+      if (currentIndex < total) {
         await processBatch(tf, threshold);
       } else {
-        const totalElapsedSec = Math.floor((new Date() - cycleStartTime) / 1000);
-        updateStatus(`Ciclo completato in ${totalElapsedSec} secondi. Riavvio ciclo...`);
+        const totElapsed = Math.floor((new Date() - cycleStartTime) / 1000);
+        updateStatus(`Ciclo completato in ${totElapsed} secondi. Riavvio ciclo...`);
         allSymbols = [];
         setTimeout(cycleProcessing, 3000);
       }
@@ -431,11 +493,11 @@ ${exchangeIcon} Exchange: ${exchangeName}
       cycleProcessing();
     }
     
-    document.addEventListener('visibilitychange', () => {
+    document.addEventListener("visibilitychange", () => {
       if (!document.hidden && wakeLock === null) { requestWakeLock(); }
     });
     
-    // NOTA: l'analisi parte solo al click su "▶ Avvia Analisi"
+    // NOTE: Il processo di analisi parte solo al click su "▶ Avvia Analisi"
   </script>
 </body>
 </html>
