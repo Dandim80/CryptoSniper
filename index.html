@@ -7,41 +7,85 @@
   <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ3J5cHRvIFNuaXBlciIsInNob3J0X25hbWUiOiJDcnlwdG9TbmlwZXIiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTExMTEiLCJ0aGVtZV9jb2xvciI6IiMyMjIyMjIiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTVRJNElpQm9aV2xuYUhROUlqRXlPQ0lpSUhacFpYZENiM2c5SWpBZ01DQXhNamdnTVRJNElpQm1hV3hzUFNJak16TXpJaUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lQZ284Y21WamRDQjNhV1IwYUQwaU1USTRMQ0FnSUdObGRtbDBhRDBpTVMwd0lHRmpiaTB6SWlCbWFXeHNQU0lqTWpJeUlpOCtQSFJsZUhRZ2VEMGlOalFpSUhrOUlqWTBJaUJtYVd4c1BTSWpSa1pHSWlCbWIyNTBMWE5wZW1VOUlqSTBJaUJtYjI1MExXWmhiV2xzZVQwaWJXOXViM053WVdObElpQjBaWGgwTFdGdVkyaHZjajBpYldsa1pHeGxJajQ4TDJSbFpuTStQQzl6ZG1jKyIsInNpemVzIjoiMTI4eDEyOCIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
   <meta name="theme-color" content="#222222">
   <style>
-    /* Stili basilari per layout, colori scuri, senso mobile-first */
-    body { 
-      font-family: Arial, sans-serif; background: #111; color: #eee; padding: 10px; margin: 0;
+    /* Layout base in modalità scura */
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #eee;
+      padding: 10px;
+      margin: 0;
     }
     h1, h2, h3 { text-align: center; }
     .controls {
-      display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; justify-content: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+      justify-content: center;
     }
-    select, input[type="number"], button { 
-      margin: 5px; padding: 8px 12px; background: #333; color: #eee; border: 1px solid #555; border-radius: 4px;
+    select, input[type="number"], button {
+      margin: 5px;
+      padding: 8px 12px;
+      background: #333;
+      color: #eee;
+      border: 1px solid #555;
+      border-radius: 4px;
     }
     button { cursor: pointer; transition: background 0.3s; }
     button:hover { background: #444; }
     .status {
-      background: #333; padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: center;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      text-align: center;
     }
-    .status.active { background: linear-gradient(90deg, #00ff88, #00cc66); color: #000; }
+    .status.active {
+      background: linear-gradient(90deg, #00ff88, #00cc66);
+      color: #000;
+    }
     #results {
-      padding: 10px; margin-top: 20px; background: #222; border-radius: 6px;
+      padding: 10px;
+      margin-top: 20px;
+      background: #222;
+      border-radius: 6px;
     }
     .coin {
-      padding: 15px; margin-bottom: 10px; background: linear-gradient(135deg, #222, #333);
-      border-radius: 8px; cursor: pointer; border-left: 4px solid #00ff88; transition: transform 0.2s;
+      padding: 15px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #222, #333);
+      border-radius: 8px;
+      cursor: pointer;
+      border-left: 4px solid #00ff88;
+      transition: transform 0.2s;
     }
     .coin.bybit { border-left-color: #f7931a; }
     .coin.binance { border-left-color: #f3ba2f; }
     .coin:hover { transform: translateX(5px); }
-    .gain { color: #00ff88; font-weight: bold; font-size: 1.2em; }
+    .gain {
+      color: #00ff88;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
     .exchange-badge {
-      display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 8px;
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: bold;
+      margin-bottom: 8px;
     }
     .exchange-badge.bybit { background: #f7931a; color: #000; }
     .exchange-badge.binance { background: #f3ba2f; color: #000; }
     .tradingview-link, .exchange-link {
-      display: inline-block; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; margin: 4px 8px 4px 0; transition: background 0.3s;
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 12px;
+      margin: 4px 8px 4px 0;
+      transition: background 0.3s;
     }
     .tradingview-link { background: #1e88e5; color: white; }
     .tradingview-link:hover { background: #1976d2; }
@@ -51,7 +95,14 @@
     .exchange-link.binance:hover { background: #d4a027; }
     .exchange-link.bybit { background: #f7931a; color: #000; }
     .exchange-link.bybit:hover { background: #d97e15; }
-    .screenshot-note { background: #444; padding: 8px; border-radius: 4px; font-size: 12px; margin-top: 8px; color: #aaa; }
+    .screenshot-note {
+      background: #444;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-top: 8px;
+      color: #aaa;
+    }
   </style>
 </head>
 <body>
@@ -152,21 +203,16 @@
       }
     }
     
-    // FUNZIONI PER CALCOLARE PIVOT HIGH E EMA10
+    // FUNZIONI PER CALCOLARE INDICATORI: PIVOT HIGH (con decimali originali) e EMA10
     function computePivotHigh(candles) {
-      let pivot = null;
-      let decimals = 0;
+      let pivot = null, decimals = 0;
       for (let i = 1; i < candles.length - 1; i++) {
-        let currentHighStr = candles[i][2]; // il valore "high" come stringa
+        let currentHighStr = candles[i][2];
         let currentHigh = parseFloat(currentHighStr);
-        let candleDecimals = 0;
-        if (currentHighStr.indexOf('.') !== -1) {
-          candleDecimals = currentHighStr.split('.')[1].length;
-        }
-        // Se è una pivot (maggiore del precedente e del successivo)
-        let highPrev = parseFloat(candles[i - 1][2]);
-        let highNext = parseFloat(candles[i + 1][2]);
-        if (currentHigh > highPrev && currentHigh > highNext) {
+        let candleDecimals = (currentHighStr.indexOf('.') !== -1) ? currentHighStr.split('.')[1].length : 0;
+        let prevHigh = parseFloat(candles[i - 1][2]);
+        let nextHigh = parseFloat(candles[i + 1][2]);
+        if (currentHigh > prevHigh && currentHigh > nextHigh) {
           if (pivot === null || currentHigh > pivot) {
             pivot = currentHigh;
             decimals = candleDecimals;
@@ -214,9 +260,10 @@
         }
         return { deepLink: null, fallback: `https://www.binance.com/en/trade/${baseAsset}_USDC` };
       } else if (exchange.toLowerCase() === "bybit") {
+        // Se il simbolo termina con "USDT", inseriamo la barra prima di USDT
         if (symbol.endsWith("USDT")) {
           const baseAsset = symbol.slice(0, -4);
-          const pair = `${baseAsset}/USDT`;  // Inserisce la barra
+          const pair = `${baseAsset}/USDT`;  // Es. "BTC/USDT"
           if (isMobile()) {
             return {
               deepLink: `bybit://trade/spot/${pair}`,
@@ -230,8 +277,8 @@
       return { deepLink: null, fallback: "#" };
     }
     
-    // La funzione launchApp prova ad aprire il deep linking tramite window.location.href; se fallisce dopo 1500ms usa il fallback.
     function launchApp(deepLink, fallback) {
+      // Questa funzione usa window.location.href per forzare l'apertura
       if (deepLink) {
         window.location.href = deepLink;
         setTimeout(() => { window.location.href = fallback; }, 1500);
@@ -243,19 +290,21 @@
     // FUNZIONI DI ANALISI DELLE CANDELE
     async function getBinanceMaxGain(symbol, tf, threshold) {
       try {
-        // Richiediamo 20 candeline per avere dati sufficienti per ema e pivot
+        // Richiediamo 20 candeline per avere dati sufficienti per EMA10 e Pivot
         const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=20`);
         const data = await res.json();
-        if (!data || data.length < 20) { console.log(`Nessun dato per ${symbol} su Binance`); return null; }
-        // Prendiamo le ultime 6 candeline per l'analisi del gain
+        if (!data || data.length < 20) { 
+          console.log(`Nessun dato per ${symbol} su Binance`);
+          return null;
+        }
+        // Per il gain prendiamo le ultime 6 candeline
         let subset = data.slice(data.length - 6);
-        let maxGain = -Infinity;
-        let bestIndex = -1;
+        let maxGain = -Infinity, bestIndex = -1;
         for (let i = 0; i < subset.length; i++) {
           let open = parseFloat(subset[i][1]);
           let close = parseFloat(subset[i][4]);
           let gain = ((close - open) / open) * 100;
-          console.log(`Binance ${symbol}: candela ${i+(data.length - 6)} gain=${gain.toFixed(2)}%`);
+          console.log(`Binance ${symbol}: candela ${i + (data.length - 6)} gain=${gain.toFixed(2)}%`);
           if (gain > maxGain) { maxGain = gain; bestIndex = i + (data.length - 6); }
         }
         if (maxGain < threshold) return null;
@@ -268,15 +317,16 @@
           index: bestIndex,
           timestamp: new Date(data[bestIndex][0]).toLocaleTimeString()
         };
-        // Calcola il Pivot High con parametri 1,1 usando tutte le candeline
+        // Calcola il Pivot High utilizzando tutte le candeline (mantiene i decimali originali)
         let pivotObj = computePivotHigh(data);
         bestCandle.pivotHigh = (pivotObj.pivot !== null) ? pivotObj.pivot.toFixed(pivotObj.decimals) : "N/A";
-        // Calcola EMA10
+        // Calcola EMA10 sui prezzi di chiusura
         let closes = data.map(c => parseFloat(c[4]));
         let ema10 = computeEMA(closes, 10);
-        let lastClose = closes[closes.length - 1];
-        bestCandle.ema10Above = lastClose > ema10;
-        // Variazione giornaliera (ticker 24hr)
+        bestCandle.ema10Above = (closes[closes.length - 1] > ema10) ? "Sì" : "No";
+        // Confronto: verifica se il Pivot High supera la EMA10
+        bestCandle.pivotAboveEMA10 = (pivotObj.pivot !== null && pivotObj.pivot > ema10) ? "Sì" : "No";
+        // Ottieni variazione giornaliera tramite ticker 24hr
         try {
           const infoRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
           const info = await infoRes.json();
@@ -300,16 +350,14 @@
           console.log(`Nessun dato per ${symbol} su Bybit`);
           return null;
         }
-        let data = dataJSON.result.list;
-        data = data.reverse(); // Ordine cronologico
+        let data = dataJSON.result.list.reverse(); // Ordine cronologico
         let subset = data.slice(data.length - 6);
-        let maxGain = -Infinity;
-        let bestIndex = -1;
+        let maxGain = -Infinity, bestIndex = -1;
         for (let i = 0; i < subset.length; i++) {
-          let op = parseFloat(subset[i][1]);
-          let cl = parseFloat(subset[i][4]);
-          let gain = ((cl - op) / op) * 100;
-          console.log(`Bybit ${symbol}: candela ${i+(data.length - 6)} gain=${gain.toFixed(2)}%`);
+          let open = parseFloat(subset[i][1]);
+          let close = parseFloat(subset[i][4]);
+          let gain = ((close - open) / open) * 100;
+          console.log(`Bybit ${symbol}: candela ${i + (data.length - 6)} gain=${gain.toFixed(2)}%`);
           if (gain > maxGain) { maxGain = gain; bestIndex = i + (data.length - 6); }
         }
         if (maxGain < threshold) return null;
@@ -322,12 +370,15 @@
           index: bestIndex,
           timestamp: new Date(parseInt(data[bestIndex][0])).toLocaleTimeString()
         };
+        // Calcola il Pivot High
         let pivotObj = computePivotHigh(data);
         bestCandle.pivotHigh = (pivotObj.pivot !== null) ? pivotObj.pivot.toFixed(pivotObj.decimals) : "N/A";
+        // Calcola EMA10 sui closing prices
         let closes = data.map(c => parseFloat(c[4]));
         let ema10 = computeEMA(closes, 10);
-        let lastClose = closes[closes.length - 1];
-        bestCandle.ema10Above = lastClose > ema10;
+        bestCandle.ema10Above = (closes[closes.length - 1] > ema10) ? "Sì" : "No";
+        bestCandle.pivotAboveEMA10 = (pivotObj.pivot !== null && pivotObj.pivot > ema10) ? "Sì" : "No";
+        // Ottieni la variazione giornaliera
         try {
           const infoRes = await fetch(`https://api.bybit.com/v5/market/ticker?category=spot&symbol=${symbol}`);
           const info = await infoRes.json();
@@ -344,34 +395,6 @@
       } catch (e) { console.error("Errore Bybit per", symbol, e); return null; }
     }
     
-    // FUNZIONI DI CALCOLO DEL PIVOT HIGH E EMA10
-    function computePivotHigh(candles) {
-      let pivot = null, decimals = 0;
-      for (let i = 1; i < candles.length - 1; i++) {
-        let currentHighStr = candles[i][2];
-        let currentHigh = parseFloat(currentHighStr);
-        let candleDecimals = currentHighStr.indexOf('.') !== -1 ? currentHighStr.split('.')[1].length : 0;
-        let prevHigh = parseFloat(candles[i-1][2]);
-        let nextHigh = parseFloat(candles[i+1][2]);
-        if (currentHigh > prevHigh && currentHigh > nextHigh) {
-          if (pivot === null || currentHigh > pivot) {
-            pivot = currentHigh;
-            decimals = candleDecimals;
-          }
-        }
-      }
-      return { pivot, decimals };
-    }
-    
-    function computeEMA(closes, period) {
-      const k = 2 / (period + 1);
-      let ema = closes[0];
-      for (let i = 1; i < closes.length; i++) {
-        ema = closes[i] * k + ema * (1 - k);
-      }
-      return ema;
-    }
-    
     async function sendTelegramAlert(data, tf) {
       const exchangeIcon = data.exchange === "bybit" ? "🟠" : "🟡";
       const exchangeName = data.exchange === "bybit" ? "BYBIT" : "BINANCE";
@@ -386,23 +409,27 @@
 <b>🕒 Candela n°:</b> ${data.index + 1} | ⏰ ${data.timestamp}<br/>
 <b>🟢 Open:</b> ${data.open} | <b>🔴 Close:</b> ${data.close}<br/>
 <b>Pivot High:</b> ${data.pivotHigh}<br/>
-<b>Prezzo sopra EMA10:</b> ${data.ema10Above ? "Sì" : "No"}<br/><br/>
+<b>Pivot > EMA10:</b> ${data.pivotAboveEMA10}<br/>
+<b>Prezzo > EMA10:</b> ${data.ema10Above}<br/><br/>
 <b>📊 TradingView:</b> <a href="tradingview://chart/?symbol=${exchangeName}:${data.symbol}&interval=${getTradingViewInterval(tf)}&theme=dark">Apri TradingView</a><br/>
 <b>🔗 ${exchangeName} Trading:</b> <a href="${
-  (exchangeName === "BINANCE" 
-     ? "binance://trade?market=" + data.symbol.replace("USDC", "") + "_USDC" 
-     : "bybit://trade/spot/" + data.symbol.slice(0, -4) + "/USDT"
-  )}">Apri ${exchangeName} Trading</a>`;
+  exchangeName === "BINANCE" 
+    ? "binance://trade?market=" + data.symbol.replace("USDC", "") + "_USDC"
+    : "bybit://trade/spot/" + data.symbol.slice(0, -4) + "/USDT"
+}">Apri ${exchangeName} Trading</a>`;
       try {
         await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: "HTML", disable_web_page_preview: false })
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: msg,
+            parse_mode: "HTML",
+            disable_web_page_preview: false
+          })
         });
         console.log(`Alert inviato per ${exchangeName}:${data.symbol}`);
-      } catch (err) {
-        console.error("Errore invio Telegram:", err);
-      }
+      } catch (err) { console.error("Errore invio Telegram:", err); }
     }
     
     async function getBinanceSymbolListForSniper() {
@@ -417,9 +444,8 @@
       try {
         const res = await fetch("https://api.bybit.com/v5/market/instruments-info?category=spot");
         const data = await res.json();
-        if (data.retCode === 0 && data.result && data.result.list) {
+        if (data.retCode === 0 && data.result && data.result.list)
           return data.result.list.filter(s => s.symbol.endsWith("USDT") && s.status === "Trading").map(s => s.symbol);
-        }
         return [];
       } catch (e) { console.error("Errore ciclo Bybit per sniper:", e); return []; }
     }
@@ -436,7 +462,11 @@
         <div>📊 Gain: <span class="gain">+${candle.gain}%</span> | 📆 24h: ${candle.dailyChange}%</div>
         <div>🕒 Candela n° ${candle.index + 1} | ⏰ ${candle.timestamp}</div>
         <div>🟢 Open: ${candle.open} | 🔴 Close: ${candle.close}</div>
-        <div><b>Pivot High:</b> ${candle.pivotHigh} &nbsp;&nbsp; <b>Prezzo sopra EMA10:</b> ${candle.ema10Above ? "Sì" : "No"}</div>
+        <div>
+          <b>Pivot High:</b> ${candle.pivotHigh} &nbsp;&nbsp;
+          <b>Pivot > EMA10:</b> ${candle.pivotAboveEMA10} &nbsp;&nbsp;
+          <b>Prezzo > EMA10:</b> ${candle.ema10Above}
+        </div>
         <div style="margin-top: 10px;">
           <a href="#" class="tradingview-link" onclick="launchApp('', '${tv.fallback}'); return false;">📊 TradingView</a>
           <a href="#" class="exchange-link ${candle.exchange}" onclick="launchApp('', '${ex.fallback}'); return false;">🔗 ${candle.exchange.toUpperCase()} Trading</a>
@@ -479,9 +509,7 @@
         let result = coin.exchange === "binance"
           ? await getBinanceMaxGain(coin.symbol, tf, threshold)
           : await getBybitMaxGain(coin.symbol, tf, threshold);
-        if (result !== null) {
-          appendResult(result);
-        }
+        if (result !== null) { appendResult(result); }
         const count = currentIndex + i + 1;
         const perc = ((count / total) * 100).toFixed(1);
         const elapsed = Math.floor((new Date() - cycleStartTime) / 1000);
@@ -509,7 +537,7 @@
       if (!document.hidden && wakeLock === null) { requestWakeLock(); }
     });
     
-    // NOTA: il processo di analisi parte solo al click su "▶ Avvia Analisi"
+    // NOTA: il processo di analisi parte solo al click su "▶ Avvia Analisi".
   </script>
 </body>
 </html>
